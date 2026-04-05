@@ -1,0 +1,9 @@
+
+PLAN.md
+LOG.md
+
+.github/
+node_modules
+out/
+dist/
+web-data/
