@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { RouterLink, RouterView, useRoute } from "vue-router";
+
 const route = useRoute();
 </script>
 
@@ -18,23 +19,9 @@ const route = useRoute();
           <RouterLink
             class="rounded-full border border-slate-700 px-4 py-2 text-sm text-slate-200 hover:border-violet-500"
             to="/"
-            >Home</RouterLink
           >
-          <RouterLink
-            class="rounded-full border border-slate-700 px-4 py-2 text-sm text-slate-200 hover:border-violet-500"
-            to="/chat"
-            >Chat</RouterLink
-          >
-          <RouterLink
-            class="rounded-full border border-slate-700 px-4 py-2 text-sm text-slate-200 hover:border-violet-500"
-            to="/share"
-            >Share</RouterLink
-          >
-          <RouterLink
-            class="rounded-full border border-slate-700 px-4 py-2 text-sm text-slate-200 hover:border-violet-500"
-            to="/view"
-            >View</RouterLink
-          >
+            Home
+          </RouterLink>
         </nav>
       </div>
     </header>

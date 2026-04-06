@@ -1,0 +1,134 @@
+<script setup lang="ts">
+import { ref } from "vue";
+import { useLocalStorage } from "../composables/useLocalStorage";
+import BaseToggleButton from "./BaseToggleButton.vue";
+import type { PostCommentParams } from "../api/client";
+
+const SIZES = [
+  { value: "small" as const, label: "小" },
+  { value: "medium" as const, label: "中" },
+  { value: "large" as const, label: "大" },
+];
+const PINS = [
+  { value: null, label: "流れる" },
+  { value: "top" as const, label: "上" },
+  { value: "bottom" as const, label: "下" },
+];
+
+const text = ref("");
+const size = ref<"small" | "medium" | "large">("medium");
+const pinPosition = ref<"top" | "bottom" | null>(null);
+const color = useLocalStorage("chatbullet_color");
+
+defineProps<{
+  newCount: number;
+}>();
+
+const emit = defineEmits<{
+  send: [params: Omit<PostCommentParams, "author">];
+  scrollToBottom: [];
+  textKeydown: [e: KeyboardEvent];
+}>();
+
+function handleSend() {
+  const t = text.value.trim();
+  if (!t) return;
+  emit("send", {
+    text: t,
+    color: color.value ?? "#ffffff",
+    size: size.value,
+    pinPosition: pinPosition.value,
+  });
+  text.value = "";
+}
+</script>
+
+<template>
+  <footer class="comment-form-footer relative flex flex-col gap-2 p-3">
+    <!-- 新着バナー -->
+    <div
+      v-if="newCount > 0"
+      class="cb-new-banner absolute z-20 cursor-pointer select-none rounded-full px-4 py-1 text-xs font-bold text-white"
+      @click="emit('scrollToBottom')"
+    >
+      ↓ {{ newCount }}件の新着
+    </div>
+
+    <!-- コメント -->
+    <div class="flex gap-1.5">
+      <input
+        v-model="text"
+        type="text"
+        placeholder="コメント（必須）"
+        maxlength="250"
+        autocomplete="off"
+        class="form-input flex-1 min-w-0 rounded-md px-2.5 py-2 text-sm"
+        @keydown.enter.prevent="handleSend"
+        @keydown="emit('textKeydown', $event)"
+      />
+      <input
+        v-model="color"
+        type="color"
+        title="文字色"
+        class="color-picker w-10 h-9 rounded-md cursor-pointer flex-shrink-0"
+      />
+      <button
+        type="button"
+        class="btn-send rounded-md px-3.5 py-2 text-sm font-bold flex-shrink-0 cursor-pointer text-white"
+        @click="handleSend"
+      >
+        送信
+      </button>
+    </div>
+
+    <!-- サイズ・位置 -->
+    <div class="flex flex-wrap gap-2 items-center">
+      <span class="cb-label-muted text-xs">サイズ:</span>
+      <BaseToggleButton
+        v-for="s in SIZES"
+        :key="s.value"
+        :active="size === s.value"
+        active-style="background:#3b82f6;border:1px solid #3b82f6;color:#fff"
+        inactive-style="background:#2a2a2a;border:1px solid #3a3a3a;color:#aaa"
+        @click="size = s.value"
+      >{{ s.label }}</BaseToggleButton>
+      <span class="cb-label-muted text-xs ml-2">位置:</span>
+      <BaseToggleButton
+        v-for="p in PINS"
+        :key="String(p.value)"
+        :active="pinPosition === p.value"
+        active-style="background:#3b82f6;border:1px solid #3b82f6;color:#fff"
+        inactive-style="background:#2a2a2a;border:1px solid #3a3a3a;color:#aaa"
+        @click="pinPosition = p.value"
+      >{{ p.label }}</BaseToggleButton>
+    </div>
+
+    <!-- ページ固有コンテンツ -->
+    <slot />
+  </footer>
+</template>
+
+<style scoped>
+.comment-form-footer {
+  background: #1a1a1a;
+  border-top: 1px solid #2a2a2a;
+  flex-shrink: 0;
+}
+
+.form-input {
+  background: #2a2a2a;
+  border: 1px solid #3a3a3a;
+  color: #eee;
+}
+
+.color-picker {
+  background: #2a2a2a;
+  border: 1px solid #3a3a3a;
+  padding: 2px;
+}
+
+.btn-send {
+  background: #22c55e;
+  border: none;
+}
+</style>

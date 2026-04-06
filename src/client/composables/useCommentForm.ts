@@ -1,38 +1,21 @@
-import { ref } from "vue";
+import { useLocalStorage } from "./useLocalStorage";
 import { postComment } from "../api/client";
+import type { PostCommentParams } from "../api/client";
 
 export function useCommentForm() {
-  const author = ref(localStorage.getItem("chatbullet_author") ?? "");
-  const text = ref("");
-  const color = ref(localStorage.getItem("chatbullet_color") ?? "#ffffff");
-  const size = ref<"small" | "medium" | "large">("medium");
-  const pinPosition = ref<"top" | "bottom" | null>(null);
+  const author = useLocalStorage("chatbullet_author");
 
-  function saveAuthor() {
-    localStorage.setItem("chatbullet_author", author.value);
-  }
-
-  function saveColor() {
-    localStorage.setItem("chatbullet_color", color.value);
-  }
-
-  async function sendComment() {
-    const a = author.value.trim();
-    const t = text.value.trim();
-    if (!a || !t) return;
+  async function sendComment(
+    params: Omit<PostCommentParams, "author">,
+  ): Promise<void> {
+    const a = (author.value ?? "").trim();
+    if (!a) return;
     try {
-      await postComment({
-        author: a,
-        text: t,
-        color: color.value,
-        size: size.value,
-        pinPosition: pinPosition.value,
-      });
-      text.value = "";
+      await postComment({ ...params, author: a });
     } catch (err) {
       console.error("Comment send failed:", err);
     }
   }
 
-  return { author, text, color, size, pinPosition, saveAuthor, saveColor, sendComment };
+  return { sendComment };
 }

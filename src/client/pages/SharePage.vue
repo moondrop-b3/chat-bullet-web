@@ -6,23 +6,12 @@ import { useCommentForm } from "../composables/useCommentForm";
 import { useScreenShare } from "../composables/useScreenShare";
 import { getComments } from "../api/client";
 import type { CommentPayload, ConfigPayload } from "../../shared/types";
-import BaseToggleButton from "../components/BaseToggleButton.vue";
-
-const SIZES = [
-  { value: "medium" as const, label: "中" },
-  { value: "small" as const, label: "小" },
-  { value: "large" as const, label: "大" },
-];
-const PINS = [
-  { value: null, label: "流れる" },
-  { value: "top" as const, label: "上" },
-  { value: "bottom" as const, label: "下" },
-];
+import CommentFormFooter from "../components/CommentFormFooter.vue";
 
 const previewEl = ref<HTMLVideoElement | null>(null);
 const commentLog = useCommentLog();
 const { comments, newCount, formatTime, scrollToBottom, onScroll, appendComment } = commentLog;
-const { author, text, color, size, pinPosition, saveAuthor, saveColor, sendComment } = useCommentForm();
+const { sendComment } = useCommentForm();
 
 const forceColor = ref(false);
 const config = reactive<ConfigPayload>({
@@ -90,6 +79,26 @@ onMounted(async () => {
           muted
           class="preview-video"
         />
+        <!-- 共有操作ボタン -->
+        <div class="flex flex-wrap gap-1.5 items-center">
+          <button
+            v-if="!sharing"
+            type="button"
+            class="btn-start rounded-md px-3 py-2 text-sm font-bold cursor-pointer text-white"
+            @click="startShare"
+          >
+            共有を開始
+          </button>
+          <button
+            v-else
+            type="button"
+            class="btn-stop rounded-md px-3 py-2 text-sm cursor-pointer"
+            @click="stopShare"
+          >
+            共有を停止
+          </button>
+          <span v-if="forceColor" class="force-color-warn">⚠ 文字色強制中</span>
+        </div>
         <div class="share-status">{{ shareStatusText }}</div>
       </div>
     </div>
@@ -156,91 +165,11 @@ onMounted(async () => {
       </div>
     </div>
 
-    <!-- フォームフッター -->
-    <footer class="share-footer relative flex flex-col gap-2 p-3">
-      <!-- 新着バナー -->
-      <div
-        v-if="newCount > 0"
-        class="cb-new-banner absolute z-20 cursor-pointer select-none rounded-full px-4 py-1 text-xs font-bold text-white"
-        @click="scrollToBottom"
-      >
-        ↓ {{ newCount }}件の新着
-      </div>
-
-      <!-- 共有操作ボタン -->
-      <div class="flex flex-wrap gap-1.5 items-center">
-        <button
-          type="button"
-          :disabled="sharing"
-          class="btn-start rounded-md px-3 py-2 text-sm font-bold cursor-pointer text-white"
-          @click="startShare"
-        >共有を開始</button>
-        <button
-          type="button"
-          :disabled="!sharing"
-          class="btn-stop rounded-md px-3 py-2 text-sm cursor-pointer"
-          @click="stopShare"
-        >共有を停止</button>
-        <span v-if="forceColor" class="force-color-warn">⚠ 文字色強制中</span>
-      </div>
-
-      <!-- 名前・コメント入力 -->
-      <div class="flex flex-wrap gap-1.5">
-        <input
-          v-model="author"
-          type="text"
-          placeholder="名前（必須）"
-          maxlength="25"
-          class="form-input rounded-md px-2.5 py-2 text-sm"
-          style="flex: 1; min-width: 120px"
-          @input="saveAuthor"
-        />
-        <input
-          v-model="text"
-          type="text"
-          placeholder="コメント（必須）"
-          maxlength="250"
-          autocomplete="off"
-          class="form-input rounded-md px-2.5 py-2 text-sm"
-          style="flex: 2; min-width: 160px"
-          @keydown.enter.prevent="sendComment"
-        />
-        <input
-          v-model="color"
-          type="color"
-          title="文字色"
-          class="color-picker w-10 h-9 rounded-md cursor-pointer flex-shrink-0"
-          @input="saveColor"
-        />
-        <button
-          type="button"
-          class="btn-send rounded-md px-3.5 py-2 text-sm font-bold flex-shrink-0 cursor-pointer text-white"
-          @click="sendComment"
-        >送信</button>
-      </div>
-
-      <!-- サイズ・位置 -->
-      <div class="flex flex-wrap gap-2 items-center">
-        <span class="cb-label-muted text-xs">サイズ:</span>
-        <BaseToggleButton
-          v-for="s in SIZES"
-          :key="s.value"
-          :active="size === s.value"
-          active-style="background:#3b82f6;border:1px solid #3b82f6;color:#fff"
-          inactive-style="background:#0f172a;border:1px solid #334155;color:#aaa"
-          @click="size = s.value"
-        >{{ s.label }}</BaseToggleButton>
-        <span class="cb-label-muted text-xs ml-2">位置:</span>
-        <BaseToggleButton
-          v-for="p in PINS"
-          :key="String(p.value)"
-          :active="pinPosition === p.value"
-          active-style="background:#3b82f6;border:1px solid #3b82f6;color:#fff"
-          inactive-style="background:#0f172a;border:1px solid #334155;color:#aaa"
-          @click="pinPosition = p.value"
-        >{{ p.label }}</BaseToggleButton>
-      </div>
-    </footer>
+    <CommentFormFooter
+      :new-count="newCount"
+      @send="sendComment"
+      @scroll-to-bottom="scrollToBottom"
+    />
   </div>
 </template>
 
@@ -292,12 +221,6 @@ onMounted(async () => {
   text-align: right;
 }
 
-.share-footer {
-  background: #111827;
-  border-top: 1px solid #1f2937;
-  flex-shrink: 0;
-}
-
 .btn-start {
   background: #22c55e;
   border: none;
@@ -312,22 +235,5 @@ onMounted(async () => {
 .force-color-warn {
   font-size: 0.7rem;
   color: #f59e0b;
-}
-
-.form-input {
-  background: #0f172a;
-  border: 1px solid #334155;
-  color: #eee;
-}
-
-.color-picker {
-  background: #0f172a;
-  border: 1px solid #334155;
-  padding: 2px;
-}
-
-.btn-send {
-  background: #22c55e;
-  border: none;
 }
 </style>
