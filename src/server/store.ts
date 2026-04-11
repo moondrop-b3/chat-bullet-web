@@ -32,7 +32,6 @@ function loadComments(): CommentPayload[] {
 export const state = {
   comments: loadComments(),
   clients: new Map<string, ClientSocket>(),
-  screenSender: null as ClientSocket | null,
   nextViewerId: 1,
   config: {
     durationSec: 3,

@@ -3,13 +3,11 @@ import { ref, reactive, useTemplateRef, onMounted, nextTick } from "vue";
 import { useWebSocket } from "../composables/useWebSocket";
 import { useCommentLog } from "../composables/useCommentLog";
 import { useCommentForm } from "../composables/useCommentForm";
-import { useScreenShare } from "../composables/useScreenShare";
 import { getComments } from "../api/client";
 import type { CommentPayload, ConfigPayload } from "../../shared/types";
 import CommentFormFooter from "../components/CommentFormFooter.vue";
 import RapidPanel from "../components/RapidPanel.vue";
 
-const previewEl = useTemplateRef<HTMLVideoElement>("previewEl");
 const logAreaEl = useTemplateRef<HTMLElement>("logAreaEl");
 const { comments, newCount, formatTime, scrollToBottom, onScroll, appendComment } = useCommentLog(logAreaEl);
 const { sendComment } = useCommentForm();
@@ -23,33 +21,13 @@ const config = reactive<ConfigPayload>({
   forcedColor: "#ffffff",
 });
 
-// ── WebSocket: 共有シグナリング + config 送信 ─────────────────────────
-const { send: wsSend, onMessage: onShareMsg } = useWebSocket("share");
+const { send: wsSend, onMessage } = useWebSocket("admin");
 
 function sendConfig() {
   wsSend({ type: "config", config: { ...config } });
 }
 
-
-const { sharing, shareStatusText, startShare, stopShare, rtc } = useScreenShare(
-  previewEl,
-  wsSend,
-  sendConfig,
-);
-
-onShareMsg(async (msg) => {
-  if (msg.type === "new-viewer") {
-    await rtc.createOffer(msg.viewerId as string);
-  } else if (msg.type === "answer") {
-    await rtc.handleAnswer(msg.viewerId as string, msg.answer);
-  } else if (msg.type === "ice-candidate") {
-    await rtc.handleIceCandidate(msg.viewerId as string, msg.candidate);
-  }
-});
-
-// ── WebSocket: コメント受信 ────────────────────────────────────────────
-const { onMessage: onCommentMsg } = useWebSocket("comment");
-onCommentMsg((msg) => {
+onMessage((msg) => {
   if (msg.type === "bullet") {
     appendComment(msg.comment as CommentPayload);
   } else if (msg.type === "config" && msg.config) {
@@ -69,44 +47,9 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="share-bg h-full flex flex-col">
-    <!-- 画面共有プレビュー -->
-    <div class="share-section">
-      <div style="display: grid; gap: 8px">
-        <div class="preview-label">画面共有プレビュー (/view が受信画面)</div>
-        <video
-          ref="previewEl"
-          autoplay
-          playsinline
-          muted
-          class="preview-video"
-        />
-        <!-- 共有操作ボタン -->
-        <div class="flex flex-wrap gap-1.5 items-center">
-          <button
-            v-if="!sharing"
-            type="button"
-            class="btn-start rounded-md px-3 py-2 text-sm font-bold cursor-pointer text-white"
-            @click="startShare"
-          >
-            共有を開始
-          </button>
-          <button
-            v-else
-            type="button"
-            class="btn-stop rounded-md px-3 py-2 text-sm cursor-pointer"
-            @click="stopShare"
-          >
-            共有を停止
-          </button>
-          <span v-if="forceColor" class="force-color-warn">⚠ 文字色強制中</span>
-        </div>
-        <div class="share-status">{{ shareStatusText }}</div>
-      </div>
-    </div>
-
+  <div class="admin-bg h-full flex flex-col">
     <!-- 表示設定スライダー -->
-    <div class="share-section">
+    <div class="admin-section">
       <div class="flex flex-wrap gap-x-6 gap-y-2 items-center">
         <div class="flex items-center gap-2">
           <span class="slider-label">文字サイズ</span>
@@ -147,6 +90,7 @@ onMounted(async () => {
           />
           <span class="slider-value" style="min-width: 28px">{{ config.pinDurationSec }}s</span>
         </div>
+        <span v-if="forceColor" class="force-color-warn">⚠ 文字色強制中</span>
       </div>
     </div>
 
@@ -178,34 +122,16 @@ onMounted(async () => {
 </template>
 
 <style scoped>
-.share-bg {
+.admin-bg {
   background: #111;
   color: #eee;
 }
 
-.share-section {
+.admin-section {
   padding: 10px 12px;
   background: #0f172a;
   border-bottom: 1px solid #1e293b;
   flex-shrink: 0;
-}
-
-.preview-label {
-  font-size: 0.85rem;
-  color: #cbd5e1;
-}
-
-.preview-video {
-  width: 100%;
-  min-height: 160px;
-  max-height: 280px;
-  border-radius: 12px;
-  background: #000;
-}
-
-.share-status {
-  font-size: 0.85rem;
-  color: #94a3b8;
 }
 
 .slider-label {
@@ -223,17 +149,6 @@ onMounted(async () => {
   font-size: 0.75rem;
   color: #f8fafc;
   text-align: right;
-}
-
-.btn-start {
-  background: #22c55e;
-  border: none;
-}
-
-.btn-stop {
-  background: #1e293b;
-  border: 1px solid #334155;
-  color: #f8fafc;
 }
 
 .force-color-warn {

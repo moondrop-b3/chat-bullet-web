@@ -1,11 +1,9 @@
 <script setup lang="ts">
 import { ref, computed, useTemplateRef, onMounted, onUnmounted } from "vue";
 import { useWebSocket } from "../composables/useWebSocket";
-import { useWebRTCReceiver } from "../composables/useWebRTC";
 import type { CommentPayload, ConfigPayload } from "../../shared/types";
 
 // ── 状態 ──────────────────────────────────────────────────────────────
-const pageEl = useTemplateRef<HTMLElement>("pageEl");
 const videoEl = useTemplateRef<HTMLVideoElement>("videoEl");
 const overlayEl = useTemplateRef<HTMLElement>("overlayEl");
 const pinnedTopEl = useTemplateRef<HTMLElement>("pinnedTopEl");
@@ -16,11 +14,8 @@ const commentsEnabled = ref(true);
 const toolbarVisible = ref(false);
 const commentAreaMode = ref<"full" | "top" | "bottom">("full");
 
-const COMMENT_AREA_MODES: Array<"full" | "top" | "bottom"> = [
-  "full",
-  "top",
-  "bottom",
-];
+const COMMENT_AREA_MODES: Array<"full" | "top" | "bottom"> = ["full", "top", "bottom"];
+
 const commentAreaLabel = computed(() => {
   if (commentAreaMode.value === "full") return "全体";
   if (commentAreaMode.value === "top") return "上半分";
@@ -28,12 +23,43 @@ const commentAreaLabel = computed(() => {
 });
 
 function cycleCommentArea() {
-  const i = COMMENT_AREA_MODES.indexOf(commentAreaMode.value);
-  commentAreaMode.value =
-    COMMENT_AREA_MODES[(i + 1) % COMMENT_AREA_MODES.length];
+  const idx = COMMENT_AREA_MODES.indexOf(commentAreaMode.value);
+  commentAreaMode.value = COMMENT_AREA_MODES[(idx + 1) % COMMENT_AREA_MODES.length];
 }
 
-// ── 弾幕レーン管理 ─────────────────────────────────────────────────────
+// ── 画面キャプチャ ────────────────────────────────────────────────────
+let localStream: MediaStream | null = null;
+
+async function startCapture() {
+  if (!navigator.mediaDevices?.getDisplayMedia) {
+    return;
+  }
+  try {
+    localStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false });
+    if (videoEl.value) {
+      videoEl.value.srcObject = localStream;
+      await videoEl.value.play();
+    }
+    hasStream.value = true;
+    localStream.getVideoTracks()[0]?.addEventListener("ended", stopCapture, { once: true });
+  } catch (err: unknown) {
+    const name = err instanceof Error ? err.name : "UnknownError";
+    if (name !== "NotAllowedError") {
+      console.error("Capture failed:", name);
+    }
+  }
+}
+
+function stopCapture() {
+  localStream?.getTracks().forEach((track) => track.stop());
+  localStream = null;
+  if (videoEl.value) {
+    videoEl.value.srcObject = null;
+  }
+  hasStream.value = false;
+}
+
+// ── 弾幕レーン管理 ────────────────────────────────────────────────────
 const LANE_COUNT = 12;
 const LANE_INTERVAL_MS = 800;
 const SIZE_RATIOS: Record<string, number> = {
@@ -61,9 +87,7 @@ function pickLane(mode: "full" | "top" | "bottom") {
         ? [7, 8, 9, 10, 11]
         : Array.from({ length: LANE_COUNT }, (_, i) => i);
 
-  const available = indexes.filter(
-    (i) => now - laneLastUsed[i] >= LANE_INTERVAL_MS,
-  );
+  const available = indexes.filter((i) => now - laneLastUsed[i] >= LANE_INTERVAL_MS);
   const pool =
     available.length > 0
       ? available
@@ -87,9 +111,7 @@ function getCommentTop(lane: number) {
 function createCommentEl(comment: CommentPayload): HTMLElement {
   const el = document.createElement("div");
   el.textContent = comment.text;
-  const clr = config.forceColor
-    ? config.forcedColor
-    : comment.color || "#ffffff";
+  const clr = config.forceColor ? config.forcedColor : comment.color || "#ffffff";
   const ratio = SIZE_RATIOS[comment.size] ?? 1.0;
   el.style.cssText = `
     white-space:nowrap;
@@ -126,7 +148,6 @@ function addPinnedComment(comment: CommentPayload) {
   } else {
     overlayEl.value?.appendChild(el);
   }
-
   const timerId = setTimeout(
     () => {
       el.remove();
@@ -146,39 +167,18 @@ function addComment(comment: CommentPayload) {
   }
 }
 
-// ── WebSocket + WebRTC ────────────────────────────────────────────────
-const { send, onMessage } = useWebSocket("view");
+// ── WebSocket ─────────────────────────────────────────────────────────
+const { onMessage } = useWebSocket("view");
 
-const rtc = useWebRTCReceiver(
-  (payload) => send(payload),
-  (stream) => {
-    if (videoEl.value) {
-      videoEl.value.srcObject = stream;
-      videoEl.value.muted = true;
-      videoEl.value.play().catch(() => {});
-    }
-    hasStream.value = true;
-  },
-);
-
-onMessage(async (msg) => {
-  if (msg.type === "offer") {
-    await rtc.handleOffer(msg.viewerId as string, msg.offer);
-  } else if (msg.type === "ice-candidate" && msg.candidate) {
-    await rtc.handleIceCandidate(msg.candidate);
-  } else if (msg.type === "bullet") {
+onMessage((msg) => {
+  if (msg.type === "bullet") {
     addComment(msg.comment as CommentPayload);
   } else if (msg.type === "config") {
     config = { ...config, ...(msg.config as Partial<ConfigPayload>) };
-  } else if (msg.type === "server" && msg.message === "sender-disconnected") {
-    hasStream.value = false;
-    if (videoEl.value) videoEl.value.srcObject = null;
-    rtc.close();
   }
 });
 
 onMounted(() => {
-  // keyframes をドキュメントに追加（重複は1回のみ）
   if (!document.getElementById("cb-keyframes")) {
     const style = document.createElement("style");
     style.id = "cb-keyframes";
@@ -194,27 +194,23 @@ onMounted(() => {
 
 onUnmounted(() => {
   pinTimers.forEach((t) => clearTimeout(t));
-  rtc.close();
+  stopCapture();
 });
 </script>
 
 <template>
   <div
-    ref="pageEl"
     class="view-page"
     @mouseenter="toolbarVisible = true"
     @mouseleave="toolbarVisible = false"
   >
-    <!-- 映像ラッパー -->
+    <!-- 映像エリア -->
     <div class="stream-container">
-      <!-- プレースホルダー（共有なし時） -->
       <div v-show="!hasStream" class="no-stream-overlay">
         <div class="no-stream-screen">
-          <p class="no-stream-text">画面共有が開始されていません。</p>
+          <p class="no-stream-text">ツールバーの「キャプチャ開始」で画面を選択してください。</p>
         </div>
       </div>
-
-      <!-- 受信映像 -->
       <video
         ref="videoEl"
         v-show="hasStream"
@@ -239,6 +235,22 @@ onUnmounted(() => {
         pointerEvents: toolbarVisible ? 'auto' : 'none',
       }"
     >
+      <button
+        v-if="!hasStream"
+        type="button"
+        class="toolbar-btn toolbar-btn--primary"
+        @click="startCapture"
+      >
+        キャプチャ開始
+      </button>
+      <button
+        v-else
+        type="button"
+        class="toolbar-btn"
+        @click="stopCapture"
+      >
+        停止
+      </button>
       <button
         type="button"
         class="toolbar-btn"
@@ -376,5 +388,10 @@ onUnmounted(() => {
 .toolbar-btn--active {
   border-color: #3b82f6;
   background: rgba(59, 130, 246, 0.22);
+}
+
+.toolbar-btn--primary {
+  border-color: #22c55e;
+  background: rgba(34, 197, 94, 0.22);
 }
 </style>

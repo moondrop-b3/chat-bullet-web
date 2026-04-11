@@ -15,33 +15,10 @@ export function registerWebSocket(wss: WebSocketServer) {
     state.clients.set(clientId, ws);
     safeSend(ws, { type: "config", config: state.config });
 
-    if (role === "share") {
-      state.screenSender = ws;
-      safeSend(ws, { type: "server", message: "sender-connected" });
-      for (const viewer of state.clients.values()) {
-        if (viewer !== ws && viewer.role === "view") {
-          safeSend(state.screenSender, { type: "new-viewer", viewerId: viewer.clientId });
-        }
-      }
-    } else {
-      safeSend(ws, { type: "server", message: "viewer-connected", viewerId: clientId });
-      if (state.screenSender) {
-        safeSend(state.screenSender, { type: "new-viewer", viewerId: clientId });
-      }
-    }
-
     ws.on("message", (raw) => handleMessage(raw.toString()));
 
     ws.on("close", () => {
       state.clients.delete(clientId);
-      if (ws === state.screenSender) {
-        state.screenSender = null;
-        for (const other of state.clients.values()) {
-          if (other.role === "viewer") {
-            safeSend(other, { type: "server", message: "sender-disconnected" });
-          }
-        }
-      }
     });
   });
 }
@@ -55,33 +32,6 @@ function handleMessage(raw: string) {
   try {
     data = JSON.parse(raw) as RawMsg;
   } catch {
-    return;
-  }
-
-  if (data.type === "offer") {
-    const viewerId = asString(data.viewerId);
-    if (!viewerId) return;
-    const peer = state.clients.get(viewerId);
-    safeSend(peer, { type: "offer", viewerId, offer: data.offer });
-    return;
-  }
-
-  if (data.type === "answer" && state.screenSender) {
-    const viewerId = asString(data.viewerId);
-    if (!viewerId) return;
-    safeSend(state.screenSender, { type: "answer", viewerId, answer: data.answer });
-    return;
-  }
-
-  if (data.type === "ice-candidate") {
-    const viewerId = asString(data.viewerId);
-    if (!viewerId) return;
-    if (data.target === "viewer") {
-      const peer = state.clients.get(viewerId);
-      safeSend(peer, { type: "ice-candidate", viewerId, candidate: data.candidate });
-    } else if (data.target === "sender" && state.screenSender) {
-      safeSend(state.screenSender, { type: "ice-candidate", viewerId, candidate: data.candidate });
-    }
     return;
   }
 
@@ -110,8 +60,4 @@ function clamp(value: unknown, fallback: number, min: number, max: number): numb
   if (typeof value !== "number") return fallback;
   if (value < min || value > max) return fallback;
   return value;
-}
-
-function asString(value: unknown): string | undefined {
-  return typeof value === "string" ? value : undefined;
 }

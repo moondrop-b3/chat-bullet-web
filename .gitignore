@@ -4,6 +4,7 @@ LOG.md
 CLAUDE.md
 .claude/
 .serena/
+certs/
 
 .github/
 node_modules

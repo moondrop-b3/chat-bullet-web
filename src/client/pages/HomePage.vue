@@ -80,11 +80,11 @@ function editAuthor() {
         </RouterLink>
         <RouterLink
           v-if="hasAuthor"
-          to="/share"
+          to="/admin"
           class="rounded-2xl border border-slate-700 bg-slate-900/80 p-6 hover:border-violet-500"
         >
-          <h2 class="text-2xl font-semibold text-white">Share</h2>
-          <p class="mt-2 text-slate-400">画面共有ページ。</p>
+          <h2 class="text-2xl font-semibold text-white">Admin</h2>
+          <p class="mt-2 text-slate-400">管理・設定ページ。</p>
         </RouterLink>
         <RouterLink
           v-if="hasAuthor"

@@ -1,8 +1,10 @@
 import express from "express";
-import { createServer } from "http";
+import { createServer } from "https";
 import { WebSocketServer } from "ws";
-import { existsSync, readFileSync } from "fs";
+import { existsSync, readFileSync, mkdirSync } from "fs";
 import { join } from "path";
+import { networkInterfaces } from "os";
+import { execSync } from "child_process";
 import commentsRouter from "./routes/comments";
 import { registerWebSocket } from "./ws/handler";
 import { sessionFile } from "./store";
@@ -10,7 +12,30 @@ import { sessionFile } from "./store";
 const PORT = process.env.PORT ? Number(process.env.PORT) : 3001;
 
 const app = express();
-const server = createServer(app);
+const certDir = join(process.cwd(), "certs");
+
+function ensureCerts() {
+  const keyPath = join(certDir, "key.pem");
+  const certPath = join(certDir, "cert.pem");
+  if (existsSync(keyPath) && existsSync(certPath)) return;
+  console.log("証明書が見つかりません。自己署名証明書を生成します...");
+  mkdirSync(certDir, { recursive: true });
+  execSync(
+    `openssl req -x509 -newkey rsa:2048 -keyout "${keyPath}" -out "${certPath}" -days 3650 -nodes -subj "//CN=localhost"`,
+    { stdio: "inherit" },
+  );
+  console.log("証明書を生成しました。");
+}
+
+ensureCerts();
+
+const server = createServer(
+  {
+    key: readFileSync(join(certDir, "key.pem")),
+    cert: readFileSync(join(certDir, "cert.pem")),
+  },
+  app,
+);
 const wss = new WebSocketServer({ server, path: "/ws" });
 
 app.use(express.json({ limit: "20kb" }));
@@ -38,7 +63,7 @@ async function setupClientMiddleware() {
     const instance = await createViteServer({
       root: clientRoot,
       configFile: join(process.cwd(), "vite.config.ts"),
-      server: { middlewareMode: true, hmr: { port: 0 } },
+      server: { middlewareMode: true, hmr: { server } },
       appType: "custom",
     });
     viteServer = instance;
@@ -73,8 +98,17 @@ function sendIndexHtml(req: express.Request, res: express.Response) {
       return sendIndexHtml(req, res);
     });
 
-    server.listen(PORT, () => {
-      console.log(`Web app server listening on http://localhost:${PORT}`);
+    server.listen(PORT, "0.0.0.0", () => {
+      console.log(`https://localhost:${PORT}`);
+      const nets = networkInterfaces();
+      for (const [name, iface] of Object.entries(nets)) {
+        if (name.startsWith("vEthernet")) continue;
+        for (const addr of iface ?? []) {
+          if (addr.family === "IPv4" && !addr.internal) {
+            console.log(`https://${addr.address}:${PORT} (${name})`);
+          }
+        }
+      }
       console.log(`Comments session file: ${sessionFile}`);
     });
   } catch (error) {
