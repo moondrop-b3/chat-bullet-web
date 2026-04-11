@@ -44,7 +44,7 @@ function handleMessage(raw: string) {
 function handleConfig(config: Partial<ConfigPayload>) {
   state.config = {
     durationSec: clamp(config.durationSec, state.config.durationSec, 1, 20),
-    fontSize: clamp(config.fontSize, state.config.fontSize, 16, 64),
+    fontSize: clamp(config.fontSize, state.config.fontSize, 10, 100),
     pinDurationSec: clamp(config.pinDurationSec, state.config.pinDurationSec, 1, 30),
     forceColor: typeof config.forceColor === "boolean"
       ? config.forceColor

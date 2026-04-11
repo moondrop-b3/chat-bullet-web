@@ -1,7 +1,17 @@
 <script setup lang="ts">
-import { ref, computed, useTemplateRef, onMounted, onUnmounted } from "vue";
+import {
+  ref,
+  reactive,
+  computed,
+  useTemplateRef,
+  onMounted,
+  onUnmounted,
+} from "vue";
+import { useRouter } from "vue-router";
 import { useWebSocket } from "../composables/useWebSocket";
 import type { CommentPayload, ConfigPayload } from "../../shared/types";
+
+const router = useRouter();
 
 // ── 状態 ──────────────────────────────────────────────────────────────
 const videoEl = useTemplateRef<HTMLVideoElement>("videoEl");
@@ -14,7 +24,11 @@ const commentsEnabled = ref(true);
 const toolbarVisible = ref(false);
 const commentAreaMode = ref<"full" | "top" | "bottom">("full");
 
-const COMMENT_AREA_MODES: Array<"full" | "top" | "bottom"> = ["full", "top", "bottom"];
+const COMMENT_AREA_MODES: Array<"full" | "top" | "bottom"> = [
+  "full",
+  "top",
+  "bottom",
+];
 
 const commentAreaLabel = computed(() => {
   if (commentAreaMode.value === "full") return "全体";
@@ -24,8 +38,18 @@ const commentAreaLabel = computed(() => {
 
 function cycleCommentArea() {
   const idx = COMMENT_AREA_MODES.indexOf(commentAreaMode.value);
-  commentAreaMode.value = COMMENT_AREA_MODES[(idx + 1) % COMMENT_AREA_MODES.length];
+  commentAreaMode.value =
+    COMMENT_AREA_MODES[(idx + 1) % COMMENT_AREA_MODES.length];
 }
+
+// ── 設定 ─────────────────────────────────────────────────────────────
+const config = reactive<ConfigPayload>({
+  durationSec: 4,
+  fontSize: 40,
+  pinDurationSec: 4,
+  forceColor: false,
+  forcedColor: "#ffffff",
+});
 
 // ── 画面キャプチャ ────────────────────────────────────────────────────
 let localStream: MediaStream | null = null;
@@ -35,13 +59,18 @@ async function startCapture() {
     return;
   }
   try {
-    localStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false });
+    localStream = await navigator.mediaDevices.getDisplayMedia({
+      video: true,
+      audio: false,
+    });
     if (videoEl.value) {
       videoEl.value.srcObject = localStream;
       await videoEl.value.play();
     }
     hasStream.value = true;
-    localStream.getVideoTracks()[0]?.addEventListener("ended", stopCapture, { once: true });
+    localStream
+      .getVideoTracks()[0]
+      ?.addEventListener("ended", stopCapture, { once: true });
   } catch (err: unknown) {
     const name = err instanceof Error ? err.name : "UnknownError";
     if (name !== "NotAllowedError") {
@@ -70,14 +99,6 @@ const SIZE_RATIOS: Record<string, number> = {
 const laneLastUsed = Array.from({ length: LANE_COUNT }, () => 0);
 const pinTimers = new Map<string, ReturnType<typeof setTimeout>>();
 
-let config: ConfigPayload = {
-  durationSec: 3,
-  fontSize: 32,
-  pinDurationSec: 3,
-  forceColor: false,
-  forcedColor: "#ffffff",
-};
-
 function pickLane(mode: "full" | "top" | "bottom") {
   const now = Date.now();
   const indexes =
@@ -87,7 +108,9 @@ function pickLane(mode: "full" | "top" | "bottom") {
         ? [7, 8, 9, 10, 11]
         : Array.from({ length: LANE_COUNT }, (_, i) => i);
 
-  const available = indexes.filter((i) => now - laneLastUsed[i] >= LANE_INTERVAL_MS);
+  const available = indexes.filter(
+    (i) => now - laneLastUsed[i] >= LANE_INTERVAL_MS,
+  );
   const pool =
     available.length > 0
       ? available
@@ -111,7 +134,9 @@ function getCommentTop(lane: number) {
 function createCommentEl(comment: CommentPayload): HTMLElement {
   const el = document.createElement("div");
   el.textContent = comment.text;
-  const clr = config.forceColor ? config.forcedColor : comment.color || "#ffffff";
+  const clr = config.forceColor
+    ? config.forcedColor
+    : comment.color || "#ffffff";
   const ratio = SIZE_RATIOS[comment.size] ?? 1.0;
   el.style.cssText = `
     white-space:nowrap;
@@ -168,13 +193,17 @@ function addComment(comment: CommentPayload) {
 }
 
 // ── WebSocket ─────────────────────────────────────────────────────────
-const { onMessage } = useWebSocket("view");
+const { send: wsSend, onMessage } = useWebSocket("view");
+
+function sendConfig() {
+  wsSend({ type: "config", config: { ...config } });
+}
 
 onMessage((msg) => {
   if (msg.type === "bullet") {
     addComment(msg.comment as CommentPayload);
   } else if (msg.type === "config") {
-    config = { ...config, ...(msg.config as Partial<ConfigPayload>) };
+    Object.assign(config, msg.config as Partial<ConfigPayload>);
   }
 });
 
@@ -208,7 +237,9 @@ onUnmounted(() => {
     <div class="stream-container">
       <div v-show="!hasStream" class="no-stream-overlay">
         <div class="no-stream-screen">
-          <p class="no-stream-text">ツールバーの「キャプチャ開始」で画面を選択してください。</p>
+          <p class="no-stream-text">
+            ツールバーの「キャプチャ開始」で画面を選択してください。
+          </p>
         </div>
       </div>
       <video
@@ -227,7 +258,7 @@ onUnmounted(() => {
       <div ref="pinnedBottomEl" class="pinned-bottom" />
     </div>
 
-    <!-- ツールバー（ホバーで表示） -->
+    <!-- ツールバー（ホバーで表示・上中央） -->
     <div
       class="toolbar"
       :style="{
@@ -243,14 +274,54 @@ onUnmounted(() => {
       >
         キャプチャ開始
       </button>
-      <button
-        v-else
-        type="button"
-        class="toolbar-btn"
-        @click="stopCapture"
-      >
+      <button v-else type="button" class="toolbar-btn" @click="stopCapture">
         停止
       </button>
+
+      <div class="toolbar-divider" />
+
+      <label class="slider-wrap">
+        <span class="slider-label">文字</span>
+        <input
+          v-model.number="config.fontSize"
+          type="range"
+          min="10"
+          max="100"
+          step="2"
+          class="slider"
+          @input="sendConfig"
+        />
+        <span class="slider-value">{{ config.fontSize }}px</span>
+      </label>
+      <label class="slider-wrap">
+        <span class="slider-label">速度</span>
+        <input
+          v-model.number="config.durationSec"
+          type="range"
+          min="2"
+          max="8"
+          step="0.5"
+          class="slider"
+          @input="sendConfig"
+        />
+        <span class="slider-value">{{ config.durationSec.toFixed(1) }}s</span>
+      </label>
+      <label class="slider-wrap">
+        <span class="slider-label">固定</span>
+        <input
+          v-model.number="config.pinDurationSec"
+          type="range"
+          min="2"
+          max="10"
+          step="1"
+          class="slider"
+          @input="sendConfig"
+        />
+        <span class="slider-value">{{ config.pinDurationSec }}s</span>
+      </label>
+
+      <div class="toolbar-divider" />
+
       <button
         type="button"
         class="toolbar-btn"
@@ -260,7 +331,18 @@ onUnmounted(() => {
         コメント {{ commentsEnabled ? "OFF" : "ON" }}
       </button>
       <button type="button" class="toolbar-btn" @click="cycleCommentArea">
-        表示: {{ commentAreaLabel }}
+        {{ commentAreaLabel }}
+      </button>
+
+      <div class="toolbar-divider" />
+
+      <button
+        type="button"
+        class="toolbar-btn"
+        :disabled="hasStream"
+        @click="router.push('/')"
+      >
+        Homeに戻る
       </button>
     </div>
   </div>
@@ -298,7 +380,6 @@ onUnmounted(() => {
 }
 
 .no-stream-screen {
-  position: relative;
   width: min(84%, 1200px);
   height: min(66%, 760px);
   display: flex;
@@ -363,25 +444,28 @@ onUnmounted(() => {
 
 .toolbar {
   position: absolute;
-  top: 12px;
-  right: 12px;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
-  gap: 10px;
+  flex-wrap: wrap;
+  gap: 8px;
   align-items: center;
-  padding: 10px;
+  padding: 10px 14px;
   background: rgba(15, 23, 42, 0.85);
   border-radius: 14px;
   transition: opacity 160ms ease;
   z-index: 95;
+  white-space: nowrap;
 }
 
 .toolbar-btn {
   border: 1px solid rgba(255, 255, 255, 0.18);
-  border-radius: 10px;
+  border-radius: 8px;
   background: rgba(255, 255, 255, 0.08);
   color: #f8fafc;
-  padding: 8px 12px;
-  font-size: 0.85rem;
+  padding: 6px 10px;
+  font-size: 0.8rem;
   cursor: pointer;
 }
 
@@ -393,5 +477,41 @@ onUnmounted(() => {
 .toolbar-btn--primary {
   border-color: #22c55e;
   background: rgba(34, 197, 94, 0.22);
+}
+
+.toolbar-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  color: #64748b;
+}
+
+.toolbar-divider {
+  width: 1px;
+  height: 24px;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.slider-wrap {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.slider-label {
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.slider {
+  width: 70px;
+  accent-color: #3b82f6;
+}
+
+.slider-value {
+  font-size: 0.75rem;
+  color: #f8fafc;
+  min-width: 30px;
 }
 </style>

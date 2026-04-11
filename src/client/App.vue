@@ -26,16 +26,14 @@ const route = useRoute();
       </div>
     </header>
 
-    <!-- fullHeight: ページが自身で高さを管理する (Chat / Share) -->
+    <!-- fullHeight: ページが自身で高さを管理する (Chat) -->
     <main v-if="route.meta.fullHeight" class="flex-1 min-h-0">
       <RouterView class="h-full" />
     </main>
 
-    <!-- 通常ページ: スクロール可能なコンテナ -->
-    <main v-else class="flex-1 overflow-auto">
-      <div class="mx-auto max-w-6xl p-6">
-        <RouterView />
-      </div>
+    <!-- 通常ページ -->
+    <main v-else class="flex-1 min-h-0">
+      <RouterView class="h-full" />
     </main>
   </div>
 </template>
