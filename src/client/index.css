@@ -2,6 +2,21 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── カラーテーマ ─────────────────────────────────────────────────────── */
+:root {
+  --color-bg:             #111111;
+  --color-bg-deep:        #0d1117;
+  --color-surface:        #1e1e1e;
+  --color-surface-2:      #2a2a2a;
+  --color-border:         #3a3a3a;
+  --color-text:           #eeeeee;
+  --color-text-secondary: #cccccc;
+  --color-text-muted:     #666666;
+  --color-primary:        #22c55e;
+  --color-accent:         #3b82f6;
+  --color-warning:        #f59e0b;
+}
+
 /* ── 共通チャットUIクラス ─────────────────────────────────────────────── */
 @layer components {
   .cb-comment-item {
