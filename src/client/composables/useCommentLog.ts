@@ -1,8 +1,8 @@
 import { ref, nextTick } from "vue";
+import type { Ref } from "vue";
 import type { CommentPayload } from "../../shared/types";
 
-export function useCommentLog() {
-  const logAreaEl = ref<HTMLElement | null>(null);
+export function useCommentLog(logAreaEl: Ref<HTMLElement | null>) {
   const comments = ref<CommentPayload[]>([]);
   const newCount = ref(0);
 
@@ -37,5 +37,5 @@ export function useCommentLog() {
     }
   }
 
-  return { logAreaEl, comments, newCount, formatTime, scrollToBottom, onScroll, appendComment };
+  return { comments, newCount, formatTime, scrollToBottom, onScroll, appendComment };
 }

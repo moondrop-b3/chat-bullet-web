@@ -1,15 +1,15 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from "vue";
+import { ref, computed, useTemplateRef, onMounted, onUnmounted } from "vue";
 import { useWebSocket } from "../composables/useWebSocket";
 import { useWebRTCReceiver } from "../composables/useWebRTC";
 import type { CommentPayload, ConfigPayload } from "../../shared/types";
 
 // ── 状態 ──────────────────────────────────────────────────────────────
-const pageEl = ref<HTMLElement | null>(null);
-const videoEl = ref<HTMLVideoElement | null>(null);
-const overlayEl = ref<HTMLElement | null>(null);
-const pinnedTopEl = ref<HTMLElement | null>(null);
-const pinnedBottomEl = ref<HTMLElement | null>(null);
+const pageEl = useTemplateRef<HTMLElement>("pageEl");
+const videoEl = useTemplateRef<HTMLVideoElement>("videoEl");
+const overlayEl = useTemplateRef<HTMLElement>("overlayEl");
+const pinnedTopEl = useTemplateRef<HTMLElement>("pinnedTopEl");
+const pinnedBottomEl = useTemplateRef<HTMLElement>("pinnedBottomEl");
 
 const hasStream = ref(false);
 const commentsEnabled = ref(true);

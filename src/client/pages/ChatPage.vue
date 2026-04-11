@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, nextTick } from "vue";
+import { ref, useTemplateRef, onMounted, nextTick } from "vue";
 import { useWebSocket } from "../composables/useWebSocket";
 import { useCommentLog } from "../composables/useCommentLog";
 import { useCommentForm } from "../composables/useCommentForm";
@@ -8,8 +8,8 @@ import type { CommentPayload } from "../../shared/types";
 import CommentFormFooter from "../components/CommentFormFooter.vue";
 import RapidPanel from "../components/RapidPanel.vue";
 
-const commentLog = useCommentLog();
-const { comments, newCount, formatTime, scrollToBottom, onScroll, appendComment } = commentLog;
+const logAreaEl = useTemplateRef<HTMLElement>("logAreaEl");
+const { comments, newCount, formatTime, scrollToBottom, onScroll, appendComment } = useCommentLog(logAreaEl);
 const { sendComment } = useCommentForm();
 
 const forceColor = ref(false);
@@ -42,7 +42,7 @@ onMounted(async () => {
   <div class="h-full flex flex-col chat-bg">
     <!-- ログエリア -->
     <div
-      :ref="el => (commentLog.logAreaEl.value = el as HTMLElement | null)"
+      ref="logAreaEl"
       class="flex-1 min-h-0 overflow-y-auto p-3 flex flex-col gap-1.5"
       @scroll="onScroll"
     >
