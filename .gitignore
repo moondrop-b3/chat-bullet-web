@@ -1,6 +1,9 @@
 
 PLAN.md
 LOG.md
+CLAUDE.md
+.claude/
+.serena/
 
 .github/
 node_modules
