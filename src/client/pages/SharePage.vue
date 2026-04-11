@@ -7,6 +7,7 @@ import { useScreenShare } from "../composables/useScreenShare";
 import { getComments } from "../api/client";
 import type { CommentPayload, ConfigPayload } from "../../shared/types";
 import CommentFormFooter from "../components/CommentFormFooter.vue";
+import RapidPanel from "../components/RapidPanel.vue";
 
 const previewEl = ref<HTMLVideoElement | null>(null);
 const commentLog = useCommentLog();
@@ -28,6 +29,7 @@ const { send: wsSend, onMessage: onShareMsg } = useWebSocket("share");
 function sendConfig() {
   wsSend({ type: "config", config: { ...config } });
 }
+
 
 const { sharing, shareStatusText, startShare, stopShare, rtc } = useScreenShare(
   previewEl,
@@ -164,6 +166,8 @@ onMounted(async () => {
         <span class="cb-comment-text">: {{ c.text }}</span>
       </div>
     </div>
+
+    <RapidPanel @send="sendComment" />
 
     <CommentFormFooter
       :new-count="newCount"

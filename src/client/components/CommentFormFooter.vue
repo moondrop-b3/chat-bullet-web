@@ -3,21 +3,12 @@ import { ref } from "vue";
 import { useLocalStorage } from "../composables/useLocalStorage";
 import BaseToggleButton from "./BaseToggleButton.vue";
 import type { PostCommentParams } from "../api/client";
-
-const SIZES = [
-  { value: "small" as const, label: "小" },
-  { value: "medium" as const, label: "中" },
-  { value: "large" as const, label: "大" },
-];
-const PINS = [
-  { value: null, label: "流れる" },
-  { value: "top" as const, label: "上" },
-  { value: "bottom" as const, label: "下" },
-];
+import { SIZES, PINS } from "../constants/commentOptions";
+import type { CommentSize, PinPosition } from "../../shared/types";
 
 const text = ref("");
-const size = ref<"small" | "medium" | "large">("medium");
-const pinPosition = ref<"top" | "bottom" | null>(null);
+const size = ref<CommentSize>("medium");
+const pinPosition = ref<PinPosition>(null);
 const color = useLocalStorage("chatbullet_color");
 
 defineProps<{

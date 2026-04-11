@@ -1,4 +1,4 @@
-import type { CommentPayload } from "../../shared/types";
+import type { CommentPayload, CommentSize, PinPosition } from "../../shared/types";
 
 export async function getComments(): Promise<CommentPayload[]> {
   const res = await fetch("/api/comments");
@@ -10,8 +10,8 @@ export interface PostCommentParams {
   author: string;
   text: string;
   color: string;
-  size: "small" | "medium" | "large";
-  pinPosition: "top" | "bottom" | null;
+  size: CommentSize;
+  pinPosition: PinPosition;
 }
 
 export async function postComment(params: PostCommentParams): Promise<void> {
