@@ -20,6 +20,22 @@
   --color-accent: #3b82f6;
   --color-highlight: #8b5cf6;
   --color-warning: #f59e0b;
+
+  /* ── ViewPage固有 ────────────────────────────────────────────────────── */
+  --color-toolbar-bg: rgba(15, 23, 42, 0.85);
+  --color-toolbar-btn-bg: rgba(255, 255, 255, 0.08);
+  --color-toolbar-btn-border: rgba(255, 255, 255, 0.18);
+  --color-toolbar-btn-active-bg: rgba(59, 130, 246, 0.22);
+  --color-toolbar-btn-primary-bg: rgba(34, 197, 94, 0.22);
+  --color-toolbar-btn-disabled-bg: rgba(255, 255, 255, 0.05);
+  --color-toolbar-btn-disabled-border: rgba(255, 255, 255, 0.1);
+  --color-toolbar-divider: rgba(255, 255, 255, 0.2);
+  --color-stream-placeholder-bg: #cbd5e1;
+  --color-stream-placeholder-border: #ef4444;
+  --color-stream-screen-bg: #f8fafc;
+  --color-stream-screen-border: #f87171;
+  --color-stream-screen-text: #0f172a;
+  --color-video-bg: #000000;
 }
 
 /* ── 共通チャットUIクラス ─────────────────────────────────────────────── */

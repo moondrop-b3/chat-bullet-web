@@ -40,22 +40,22 @@ function editAuthor() {
             type="text"
             placeholder="名前を入力（必須）"
             maxlength="25"
-            class="author-input rounded-lg px-3 py-2"
+            class="rounded-lg px-3 py-2 w-[220px] bg-cb-surface-2 border border-cb-border-strong text-cb-text-bright text-[0.95rem] focus:outline-none focus:border-cb-accent placeholder:text-cb-text-muted"
             @keyup.enter="confirmAuthor"
           />
           <button
             type="button"
-            class="btn-confirm rounded px-3 py-1"
+            class="rounded-md px-3 py-1.5 text-xs cursor-pointer bg-cb-accent text-cb-text-bright border-0"
             @click="confirmAuthor"
           >
             確定
           </button>
         </div>
         <div v-else class="flex items-center gap-2">
-          <span class="author-value">{{ authorStorage }}</span>
+          <span class="text-[1.2rem] font-semibold text-cb-text-bright">{{ authorStorage }}</span>
           <button
             type="button"
-            class="btn-edit"
+            class="bg-transparent border-0 cursor-pointer text-[0.85rem] text-cb-text-muted hover:text-cb-text-dim"
             @click="editAuthor"
             aria-label="編集"
           >
@@ -89,50 +89,3 @@ function editAuthor() {
     </div>
   </div>
 </template>
-
-<style scoped>
-.author-input {
-  background: var(--color-surface-2);
-  border: 1px solid var(--color-border-strong);
-  color: var(--color-text-bright);
-  font-size: 0.95rem;
-  width: 220px;
-}
-
-.author-input:focus {
-  outline: none;
-  border-color: var(--color-accent);
-}
-
-.author-input::placeholder {
-  color: var(--color-text-muted);
-}
-
-.author-value {
-  font-size: 1.2rem;
-  font-weight: 600;
-  color: var(--color-text-bright);
-}
-
-.btn-confirm {
-  background: var(--color-accent);
-  color: var(--color-text-bright);
-  border: none;
-  font-size: 0.8rem;
-  padding: 6px 12px;
-  border-radius: 6px;
-  cursor: pointer;
-}
-
-.btn-edit {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 0.85rem;
-  color: var(--color-text-muted);
-}
-
-.btn-edit:hover {
-  color: var(--color-text-dim);
-}
-</style>

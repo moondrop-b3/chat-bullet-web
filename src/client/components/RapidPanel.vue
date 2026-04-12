@@ -87,7 +87,7 @@ onUnmounted(() => window.removeEventListener("keydown", onKeydown));
 </script>
 
 <template>
-  <div v-show="isVisible" class="rapid-panel flex flex-col gap-2 p-3">
+  <div v-show="isVisible" class="flex flex-col gap-2 p-3 bg-cb-bg border-t border-cb-surface-2">
     <!-- 登録済みストック -->
     <div class="flex flex-wrap gap-1.5 items-center">
       <div
@@ -97,7 +97,7 @@ onUnmounted(() => window.removeEventListener("keydown", onKeydown));
       >
         <button
           type="button"
-          class="rapid-stock-btn rounded pr-5 pl-2 py-0.5 text-xs cursor-pointer"
+          class="rounded pr-5 pl-2 py-0.5 text-xs cursor-pointer bg-cb-surface border border-cb-border"
           :style="{ color: stock.color }"
           @click="sendStock(stock)"
         >
@@ -105,7 +105,7 @@ onUnmounted(() => window.removeEventListener("keydown", onKeydown));
         </button>
         <button
           type="button"
-          class="rapid-delete-btn absolute right-0.5 top-1/2 -translate-y-1/2 px-0.5 text-xs leading-none cursor-pointer"
+          class="absolute right-0.5 top-1/2 -translate-y-1/2 px-0.5 text-xs leading-none cursor-pointer bg-transparent border-0 text-cb-text-muted"
           @click="deleteStock(i)"
         >
           ×
@@ -120,19 +120,19 @@ onUnmounted(() => window.removeEventListener("keydown", onKeydown));
         type="text"
         placeholder="ラベル"
         maxlength="10"
-        class="rapid-label-input rounded px-2 py-1 text-xs"
+        class="rounded px-2 py-1 text-xs w-[70px] bg-cb-surface-2 border border-cb-border text-cb-text"
       />
       <input
         v-model="newText"
         type="text"
         placeholder="送信テキスト"
         maxlength="250"
-        class="rapid-text-input flex-1 min-w-20 rounded px-2 py-1 text-xs"
+        class="flex-1 min-w-20 rounded px-2 py-1 text-xs bg-cb-surface-2 border border-cb-border text-cb-text"
       />
       <input
         v-model="newColor"
         type="color"
-        class="color-picker-sm w-8 h-7 rounded cursor-pointer"
+        class="w-8 h-7 rounded cursor-pointer bg-cb-surface-2 border border-cb-border p-px"
       />
       <BaseToggleButton
         v-for="s in SIZES"
@@ -154,7 +154,7 @@ onUnmounted(() => window.removeEventListener("keydown", onKeydown));
       >
       <button
         type="button"
-        class="btn-add rounded-md px-3 py-1 text-sm cursor-pointer"
+        class="rounded-md px-3 py-1 text-sm cursor-pointer bg-cb-surface-dark text-cb-text border-0"
         @click="addStock"
       >
         ＋追加
@@ -162,46 +162,3 @@ onUnmounted(() => window.removeEventListener("keydown", onKeydown));
     </div>
   </div>
 </template>
-
-<style scoped>
-.rapid-panel {
-  background: var(--color-bg);
-  border-top: 1px solid var(--color-surface-2);
-}
-
-.rapid-stock-btn {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-}
-
-.rapid-delete-btn {
-  background: none;
-  border: none;
-  color: var(--color-text-muted);
-}
-
-.rapid-label-input {
-  width: 70px;
-  background: var(--color-surface-2);
-  border: 1px solid var(--color-border);
-  color: var(--color-text);
-}
-
-.rapid-text-input {
-  background: var(--color-surface-2);
-  border: 1px solid var(--color-border);
-  color: var(--color-text);
-}
-
-.color-picker-sm {
-  background: var(--color-surface-2);
-  border: 1px solid var(--color-border);
-  padding: 1px;
-}
-
-.btn-add {
-  background: var(--color-surface-dark);
-  color: var(--color-text);
-  border: none;
-}
-</style>

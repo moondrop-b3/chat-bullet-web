@@ -4,7 +4,6 @@ import { useWebSocket } from "../composables/useWebSocket";
 import { useCommentLog } from "../composables/useCommentLog";
 import { useCommentForm } from "../composables/useCommentForm";
 import { getComments } from "../api/client";
-import type { CommentPayload } from "../../shared/types";
 import CommentFormFooter from "../components/CommentFormFooter.vue";
 import RapidPanel from "../components/RapidPanel.vue";
 
@@ -48,7 +47,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="h-full flex flex-col chat-bg">
+  <div class="h-full flex flex-col bg-cb-bg text-cb-text">
     <!-- ログエリア -->
     <div
       ref="logAreaEl"
@@ -80,20 +79,9 @@ onMounted(async () => {
       @send="sendComment"
       @scroll-to-bottom="scrollToBottom"
     >
-      <div v-if="isForceColor" class="force-color-warn text-xs">
+      <div v-if="isForceColor" class="text-cb-warning text-xs">
         ⚠ 管理者が文字色を強制中
       </div>
     </CommentFormFooter>
   </div>
 </template>
-
-<style scoped>
-.chat-bg {
-  background: var(--color-bg);
-  color: var(--color-text);
-}
-
-.force-color-warn {
-  color: var(--color-warning);
-}
-</style>

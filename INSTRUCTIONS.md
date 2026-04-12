@@ -41,6 +41,7 @@
 
 ## スタイル
 
+- **Tailwind ユーティリティクラスを優先する**: スタイルは `<style scoped>` に CSS を書くのではなく、Tailwind のユーティリティクラスをテンプレートに直接記述する。Tailwind で表現できないスタイル（複雑なアニメーション、疑似要素など）のみ `<style scoped>` を使う
 - **色は `index.css` の CSS 変数で定義し、Tailwind 経由で使う**:
   - 色の追加は `index.css` の `:root` に `--color-xxxx` で定義し、`tailwind.config.js` の `extend.colors` に `cb-xxxx` として登録する
   - テンプレートでは `bg-cb-bg`・`text-cb-text` 等の `cb-` プレフィックスのクラスで参照する

@@ -37,7 +37,7 @@ function handleSend() {
 </script>
 
 <template>
-  <footer class="comment-form-footer relative flex flex-col gap-2 p-3">
+  <footer class="relative flex flex-col gap-2 p-3 bg-cb-surface border-t border-cb-surface-2 flex-shrink-0">
     <!-- 新着バナー -->
     <div
       v-if="newCount > 0"
@@ -55,7 +55,7 @@ function handleSend() {
         placeholder="コメント（必須）"
         maxlength="250"
         autocomplete="off"
-        class="form-input flex-1 min-w-0 rounded-md px-2.5 py-2 text-sm"
+        class="flex-1 min-w-0 rounded-md px-2.5 py-2 text-sm bg-cb-surface-2 border border-cb-border text-cb-text"
         @keydown.enter.prevent="handleSend"
         @keydown="emit('textKeydown', $event)"
       />
@@ -63,11 +63,11 @@ function handleSend() {
         v-model="color"
         type="color"
         title="文字色"
-        class="color-picker w-10 h-9 rounded-md cursor-pointer flex-shrink-0"
+        class="w-10 h-9 rounded-md cursor-pointer flex-shrink-0 bg-cb-surface-2 border border-cb-border p-0.5"
       />
       <button
         type="button"
-        class="btn-send rounded-md px-3.5 py-2 text-sm font-bold flex-shrink-0 cursor-pointer text-cb-text-bright"
+        class="rounded-md px-3.5 py-2 text-sm font-bold flex-shrink-0 cursor-pointer text-cb-text-bright bg-cb-primary border-0"
         @click="handleSend"
       >
         送信
@@ -102,28 +102,3 @@ function handleSend() {
     <slot />
   </footer>
 </template>
-
-<style scoped>
-.comment-form-footer {
-  background: var(--color-surface);
-  border-top: 1px solid var(--color-surface-2);
-  flex-shrink: 0;
-}
-
-.form-input {
-  background: var(--color-surface-2);
-  border: 1px solid var(--color-border);
-  color: var(--color-text);
-}
-
-.color-picker {
-  background: var(--color-surface-2);
-  border: 1px solid var(--color-border);
-  padding: 2px;
-}
-
-.btn-send {
-  background: var(--color-primary);
-  border: none;
-}
-</style>
