@@ -9,7 +9,12 @@ import type { CommentSize, PinPosition } from "../../shared/types";
 const text = ref("");
 const size = ref<CommentSize>("medium");
 const pinPosition = ref<PinPosition>(null);
+const DEFAULT_COLOR = "#ffffff";
 const color = useLocalStorage("chatbullet_color");
+
+if (color.value === null) {
+  color.value = DEFAULT_COLOR;
+}
 
 defineProps<{
   newCount: number;
