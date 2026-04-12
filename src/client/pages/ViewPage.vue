@@ -9,7 +9,7 @@ import {
 } from "vue";
 import { useRouter } from "vue-router";
 import { useWebSocket } from "../composables/useWebSocket";
-import type { CommentPayload, ConfigPayload } from "../../shared/types";
+import type { CommentPayload, ConfigPayload, CommentSize } from "../../shared/types";
 
 const router = useRouter();
 
@@ -22,9 +22,11 @@ const pinnedBottomEl = useTemplateRef<HTMLElement>("pinnedBottomEl");
 const hasStream = ref(false);
 const isCommentsEnabled = ref(true);
 const isToolbarVisible = ref(false);
-const commentAreaMode = ref<"full" | "top" | "bottom">("full");
+type CommentAreaMode = "full" | "top" | "bottom";
 
-const COMMENT_AREA_MODES: Array<"full" | "top" | "bottom"> = [
+const commentAreaMode = ref<CommentAreaMode>("full");
+
+const COMMENT_AREA_MODES: CommentAreaMode[] = [
   "full",
   "top",
   "bottom",
@@ -95,7 +97,7 @@ function stopCapture() {
 // ── 弾幕レーン管理 ────────────────────────────────────────────────────
 const LANE_COUNT = 12;
 const LANE_INTERVAL_MS = 800;
-const SIZE_RATIOS: Record<string, number> = {
+const SIZE_RATIOS: Record<CommentSize, number> = {
   small: 0.7,
   medium: 1.0,
   large: 1.5,
@@ -103,7 +105,7 @@ const SIZE_RATIOS: Record<string, number> = {
 const laneLastUsed = Array.from({ length: LANE_COUNT }, () => 0);
 const pinTimers = new Map<string, ReturnType<typeof setTimeout>>();
 
-function pickLane(mode: "full" | "top" | "bottom") {
+function pickLane(mode: CommentAreaMode) {
   const now = Date.now();
   const indexes =
     mode === "top"
