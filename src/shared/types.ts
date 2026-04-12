@@ -19,6 +19,14 @@ export type ConfigPayload = {
   forcedColor: string;
 };
 
+export type RapidStock = {
+  label: string;
+  text: string;
+  color: string;
+  size: CommentSize;
+  pin: PinPosition;
+};
+
 export type WsMessage =
   | { type: "offer"; viewerId: string; offer: unknown }
   | { type: "answer"; viewerId: string; answer: unknown }
@@ -32,5 +40,4 @@ export type WsMessage =
   | { type: "bullet"; comment: CommentPayload }
   | { type: "server"; message: string; viewerId?: string }
   | { type: "new-viewer"; viewerId: string }
-  | { type: "clearLog"; before: number }
-  | { type: string; [key: string]: unknown };
+  | { type: "clearLog"; before: number };

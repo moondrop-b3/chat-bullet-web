@@ -1,18 +1,26 @@
-import type { CommentPayload, CommentSize, PinPosition } from "../../shared/types";
+import type {
+  CommentPayload,
+  CommentSize,
+  PinPosition,
+} from "../../shared/types";
 
 export async function getComments(): Promise<CommentPayload[]> {
   const res = await fetch("/api/comments");
-  if (!res.ok) throw new Error(`Failed to load comments: ${res.status}`);
-  return res.json() as Promise<CommentPayload[]>;
+  if (!res.ok) {
+    throw new Error(`Failed to load comments: ${res.status}`);
+  }
+  // サーバーAPIのレスポンスのため型を事前検証できない
+  const data: unknown = await res.json();
+  return data as CommentPayload[];
 }
 
-export interface PostCommentParams {
+export type PostCommentParams = {
   author: string;
   text: string;
   color: string;
   size: CommentSize;
   pinPosition: PinPosition;
-}
+};
 
 export async function postComment(params: PostCommentParams): Promise<void> {
   const res = await fetch("/api/comments", {
@@ -20,5 +28,7 @@ export async function postComment(params: PostCommentParams): Promise<void> {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(params),
   });
-  if (!res.ok) throw new Error(`Failed to post comment: ${res.status}`);
+  if (!res.ok) {
+    throw new Error(`Failed to post comment: ${res.status}`);
+  }
 }

@@ -3,30 +3,48 @@ import type { WsMessage } from "../../shared/types";
 
 type MessageHandler = (msg: WsMessage) => void;
 
+function isWsMessage(value: unknown): value is WsMessage {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "type" in value &&
+    typeof (value as Record<string, unknown>).type === "string"
+  );
+}
+
 export function useWebSocket(role: string) {
-  const connected = ref(false);
+  const isConnected = ref(false);
   const handlers = new Set<MessageHandler>();
   let ws: WebSocket | null = null;
-  let destroyed = false;
+  let isDestroyed = false;
 
   function connect() {
-    if (destroyed) return;
+    if (isDestroyed) {
+      return;
+    }
     const proto = location.protocol === "https:" ? "wss:" : "ws:";
     ws = new WebSocket(`${proto}//${location.host}/ws?role=${role}`);
 
     ws.addEventListener("open", () => {
-      connected.value = true;
+      isConnected.value = true;
     });
     ws.addEventListener("close", () => {
-      connected.value = false;
-      if (!destroyed) setTimeout(connect, 3000);
+      isConnected.value = false;
+      if (!isDestroyed) {
+        setTimeout(connect, 3000);
+      }
     });
     ws.addEventListener("message", (event: MessageEvent) => {
       try {
-        const msg = JSON.parse(event.data as string) as WsMessage;
-        for (const handler of handlers) handler(msg);
+        const parsed: unknown = JSON.parse(String(event.data));
+        if (!isWsMessage(parsed)) {
+          return;
+        }
+        for (const handler of handlers) {
+          handler(parsed);
+        }
       } catch {
-        // ignore malformed messages
+        // 不正なメッセージは無視する
       }
     });
   }
@@ -42,12 +60,12 @@ export function useWebSocket(role: string) {
   }
 
   function disconnect(): void {
-    destroyed = true;
+    isDestroyed = true;
     ws?.close();
   }
 
   connect();
   onUnmounted(disconnect);
 
-  return { connected, send, onMessage };
+  return { isConnected, send, onMessage };
 }

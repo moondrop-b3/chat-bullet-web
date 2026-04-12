@@ -9,15 +9,15 @@ const route = useRoute();
   <RouterView v-if="route.meta.fullscreen" />
 
   <!-- その他ページ: ヘッダー + コンテンツエリア -->
-  <div v-else class="h-screen flex flex-col bg-slate-950 text-white">
+  <div v-else class="h-screen flex flex-col bg-cb-bg-deep text-cb-text-bright">
     <header
-      class="flex-shrink-0 border-b border-slate-800 bg-slate-900/80 px-6 py-4"
+      class="flex-shrink-0 border-b border-cb-border bg-cb-surface-dark/80 px-6 py-4"
     >
       <div class="mx-auto flex max-w-6xl items-center justify-between">
         <h1 class="text-xl font-semibold">Chat Bullet</h1>
         <nav class="flex flex-wrap gap-3">
           <RouterLink
-            class="rounded-full border border-slate-700 px-4 py-2 text-sm text-slate-200 hover:border-violet-500"
+            class="rounded-full border border-cb-border px-4 py-2 text-sm text-cb-text-bright hover:border-cb-highlight"
             to="/"
           >
             Home

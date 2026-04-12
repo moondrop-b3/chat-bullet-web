@@ -9,9 +9,11 @@ const isEditing = ref(!authorStorage.value);
 const hasAuthor = computed(() => (authorStorage.value ?? "").trim().length > 0);
 
 function confirmAuthor() {
-  const v = authorInput.value.trim();
-  if (!v) return;
-  authorStorage.value = v;
+  const trimmedValue = authorInput.value.trim();
+  if (!trimmedValue) {
+    return;
+  }
+  authorStorage.value = trimmedValue;
   isEditing.value = false;
 }
 
@@ -23,11 +25,11 @@ function editAuthor() {
 
 <template>
   <div
-    class="h-full bg-[#0d1117] flex flex-col items-center justify-start pt-24 p-6"
+    class="h-full bg-cb-bg-deep flex flex-col items-center justify-start pt-24 p-6"
   >
     <div class="w-full max-w-2xl">
-      <h1 class="text-4xl font-bold text-white">Chat Bullet</h1>
-      <p class="mt-2 text-slate-400">LAN内動作 弾幕ツール</p>
+      <h1 class="text-4xl font-bold text-cb-text-bright">Chat Bullet</h1>
+      <p class="mt-2 text-cb-text-dim">LAN内動作 弾幕ツール</p>
 
       <!-- 名前入力 -->
       <div class="mt-8 flex items-center gap-3">
@@ -66,20 +68,22 @@ function editAuthor() {
         <RouterLink
           v-if="hasAuthor"
           to="/chat"
-          class="rounded-2xl border border-slate-700 bg-slate-900/80 p-6 hover:border-violet-500"
+          class="rounded-2xl border border-cb-border-strong bg-cb-surface-dark/80 p-6 hover:border-cb-highlight"
         >
-          <h2 class="text-2xl font-semibold text-white">Chat</h2>
-          <p class="mt-2 text-slate-400">
+          <h2 class="text-2xl font-semibold text-cb-text-bright">Chat</h2>
+          <p class="mt-2 text-cb-text-dim">
             チャット用ページ - チャット送信＋チャットログ
           </p>
         </RouterLink>
         <RouterLink
           v-if="hasAuthor"
           to="/view"
-          class="rounded-2xl border border-slate-700 bg-slate-900/80 p-6 hover:border-violet-500"
+          class="rounded-2xl border border-cb-border-strong bg-cb-surface-dark/80 p-6 hover:border-cb-highlight"
         >
-          <h2 class="text-2xl font-semibold text-white">View</h2>
-          <p class="mt-2 text-slate-400">配信用ページ - 画面キャプチャ＋弾幕</p>
+          <h2 class="text-2xl font-semibold text-cb-text-bright">View</h2>
+          <p class="mt-2 text-cb-text-dim">
+            配信用ページ - 画面キャプチャ＋弾幕
+          </p>
         </RouterLink>
       </section>
     </div>
@@ -87,33 +91,32 @@ function editAuthor() {
 </template>
 
 <style scoped>
-
 .author-input {
-  background: #1e293b;
-  border: 1px solid #334155;
-  color: #f1f5f9;
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border-strong);
+  color: var(--color-text-bright);
   font-size: 0.95rem;
   width: 220px;
 }
 
 .author-input:focus {
   outline: none;
-  border-color: #3b82f6;
+  border-color: var(--color-accent);
 }
 
 .author-input::placeholder {
-  color: #64748b;
+  color: var(--color-text-muted);
 }
 
 .author-value {
   font-size: 1.2rem;
   font-weight: 600;
-  color: #f1f5f9;
+  color: var(--color-text-bright);
 }
 
 .btn-confirm {
-  background: #3b82f6;
-  color: #fff;
+  background: var(--color-accent);
+  color: var(--color-text-bright);
   border: none;
   font-size: 0.8rem;
   padding: 6px 12px;
@@ -126,10 +129,10 @@ function editAuthor() {
   border: none;
   cursor: pointer;
   font-size: 0.85rem;
-  color: #475569;
+  color: var(--color-text-muted);
 }
 
 .btn-edit:hover {
-  color: #94a3b8;
+  color: var(--color-text-dim);
 }
 </style>

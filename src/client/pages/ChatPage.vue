@@ -9,22 +9,31 @@ import CommentFormFooter from "../components/CommentFormFooter.vue";
 import RapidPanel from "../components/RapidPanel.vue";
 
 const logAreaEl = useTemplateRef<HTMLElement>("logAreaEl");
-const { comments, newCount, formatTime, scrollToBottom, onScroll, appendComment } = useCommentLog(logAreaEl);
+const {
+  comments,
+  newCount,
+  formatTime,
+  scrollToBottom,
+  onScroll,
+  appendComment,
+} = useCommentLog(logAreaEl);
 const { sendComment } = useCommentForm();
 
-const forceColor = ref(false);
+const isForceColor = ref(false);
 
 const { onMessage } = useWebSocket("comment");
 
 onMessage((msg) => {
   if (msg.type === "bullet") {
-    appendComment(msg.comment as CommentPayload);
-  } else if (msg.type === "config" && msg.config) {
-    const cfg = msg.config as { forceColor?: boolean };
-    if (typeof cfg.forceColor === "boolean") forceColor.value = cfg.forceColor;
+    appendComment(msg.comment);
+  } else if (msg.type === "config") {
+    if (typeof msg.config.forceColor === "boolean") {
+      isForceColor.value = msg.config.forceColor;
+    }
   } else if (msg.type === "clearLog") {
-    const before = (msg as { before: number }).before;
-    comments.value = comments.value.filter((c) => c.createdAt >= before);
+    comments.value = comments.value.filter(
+      (comment) => comment.createdAt >= msg.before,
+    );
   }
 });
 
@@ -47,13 +56,20 @@ onMounted(async () => {
       @scroll="onScroll"
     >
       <div
-        v-for="c in comments"
-        :key="c.id"
+        v-for="comment in comments"
+        :key="comment.id"
         class="cb-comment-item rounded-md px-2.5 py-1.5 text-xs break-all"
       >
-        <span class="cb-comment-time tabular-nums mr-1">{{ formatTime(c.createdAt) }}</span>
-        <span class="font-bold" :style="{ color: c.color || '#22c55e' }" :title="c.author">{{ c.author }}</span>
-        <span class="cb-comment-text">: {{ c.text }}</span>
+        <span class="cb-comment-time tabular-nums mr-1">{{
+          formatTime(comment.createdAt)
+        }}</span>
+        <span
+          class="font-bold"
+          :style="{ color: comment.color || '#22c55e' }"
+          :title="comment.author"
+          >{{ comment.author }}</span
+        >
+        <span class="cb-comment-text">: {{ comment.text }}</span>
       </div>
     </div>
 
@@ -64,7 +80,7 @@ onMounted(async () => {
       @send="sendComment"
       @scroll-to-bottom="scrollToBottom"
     >
-      <div v-if="forceColor" class="force-color-warn text-xs">
+      <div v-if="isForceColor" class="force-color-warn text-xs">
         ⚠ 管理者が文字色を強制中
       </div>
     </CommentFormFooter>
@@ -73,11 +89,11 @@ onMounted(async () => {
 
 <style scoped>
 .chat-bg {
-  background: #111;
-  color: #eee;
+  background: var(--color-bg);
+  color: var(--color-text);
 }
 
 .force-color-warn {
-  color: #f59e0b;
+  color: var(--color-warning);
 }
 </style>

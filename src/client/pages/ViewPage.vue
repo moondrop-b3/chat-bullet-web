@@ -20,8 +20,8 @@ const pinnedTopEl = useTemplateRef<HTMLElement>("pinnedTopEl");
 const pinnedBottomEl = useTemplateRef<HTMLElement>("pinnedBottomEl");
 
 const hasStream = ref(false);
-const commentsEnabled = ref(true);
-const toolbarVisible = ref(false);
+const isCommentsEnabled = ref(true);
+const isToolbarVisible = ref(false);
 const commentAreaMode = ref<"full" | "top" | "bottom">("full");
 
 const COMMENT_AREA_MODES: Array<"full" | "top" | "bottom"> = [
@@ -31,8 +31,12 @@ const COMMENT_AREA_MODES: Array<"full" | "top" | "bottom"> = [
 ];
 
 const commentAreaLabel = computed(() => {
-  if (commentAreaMode.value === "full") return "全体";
-  if (commentAreaMode.value === "top") return "上半分";
+  if (commentAreaMode.value === "full") {
+    return "全体";
+  }
+  if (commentAreaMode.value === "top") {
+    return "上半分";
+  }
   return "下半分";
 });
 
@@ -126,8 +130,12 @@ function pickLane(mode: "full" | "top" | "bottom") {
 
 function getCommentTop(lane: number) {
   const mode = commentAreaMode.value;
-  if (mode === "top") return `${5 + (lane % 5) * 8}%`;
-  if (mode === "bottom") return `${55 + (lane % 5) * 8}%`;
+  if (mode === "top") {
+    return `${5 + (lane % 5) * 8}%`;
+  }
+  if (mode === "bottom") {
+    return `${55 + (lane % 5) * 8}%`;
+  }
   return `${(lane / LANE_COUNT) * 100}%`;
 }
 
@@ -150,7 +158,9 @@ function createCommentEl(comment: CommentPayload): HTMLElement {
 
 function addFlowComment(comment: CommentPayload) {
   const overlay = overlayEl.value;
-  if (!overlay) return;
+  if (!overlay) {
+    return;
+  }
   const el = createCommentEl(comment);
   const lane = pickLane(commentAreaMode.value);
   el.style.position = "absolute";
@@ -184,7 +194,9 @@ function addPinnedComment(comment: CommentPayload) {
 }
 
 function addComment(comment: CommentPayload) {
-  if (!commentsEnabled.value) return;
+  if (!isCommentsEnabled.value) {
+    return;
+  }
   if (comment.pinPosition === "top" || comment.pinPosition === "bottom") {
     addPinnedComment(comment);
   } else {
@@ -201,9 +213,9 @@ function sendConfig() {
 
 onMessage((msg) => {
   if (msg.type === "bullet") {
-    addComment(msg.comment as CommentPayload);
+    addComment(msg.comment);
   } else if (msg.type === "config") {
-    Object.assign(config, msg.config as Partial<ConfigPayload>);
+    Object.assign(config, msg.config);
   }
 });
 
@@ -222,7 +234,7 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
-  pinTimers.forEach((t) => clearTimeout(t));
+  pinTimers.forEach((timer) => clearTimeout(timer));
   stopCapture();
 });
 </script>
@@ -230,8 +242,8 @@ onUnmounted(() => {
 <template>
   <div
     class="view-page"
-    @mouseenter="toolbarVisible = true"
-    @mouseleave="toolbarVisible = false"
+    @mouseenter="isToolbarVisible = true"
+    @mouseleave="isToolbarVisible = false"
   >
     <!-- 映像エリア -->
     <div class="stream-container">
@@ -253,7 +265,7 @@ onUnmounted(() => {
     </div>
 
     <!-- 弾幕オーバーレイ -->
-    <div ref="overlayEl" v-show="commentsEnabled" class="comment-overlay">
+    <div ref="overlayEl" v-show="isCommentsEnabled" class="comment-overlay">
       <div ref="pinnedTopEl" class="pinned-top" />
       <div ref="pinnedBottomEl" class="pinned-bottom" />
     </div>
@@ -262,8 +274,8 @@ onUnmounted(() => {
     <div
       class="toolbar"
       :style="{
-        opacity: toolbarVisible ? 1 : 0,
-        pointerEvents: toolbarVisible ? 'auto' : 'none',
+        opacity: isToolbarVisible ? 1 : 0,
+        pointerEvents: isToolbarVisible ? 'auto' : 'none',
       }"
     >
       <button
@@ -325,10 +337,10 @@ onUnmounted(() => {
       <button
         type="button"
         class="toolbar-btn"
-        :class="{ 'toolbar-btn--active': commentsEnabled }"
-        @click="commentsEnabled = !commentsEnabled"
+        :class="{ 'toolbar-btn--active': isCommentsEnabled }"
+        @click="isCommentsEnabled = !isCommentsEnabled"
       >
-        コメント {{ commentsEnabled ? "OFF" : "ON" }}
+        コメント {{ isCommentsEnabled ? "OFF" : "ON" }}
       </button>
       <button type="button" class="toolbar-btn" @click="cycleCommentArea">
         {{ commentAreaLabel }}
@@ -353,7 +365,7 @@ onUnmounted(() => {
   position: relative;
   width: 100%;
   height: 100vh;
-  background: #334155;
+  background: var(--color-border-strong);
   overflow: hidden;
 }
 
@@ -463,19 +475,19 @@ onUnmounted(() => {
   border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.08);
-  color: #f8fafc;
+  color: var(--color-text-bright);
   padding: 6px 10px;
   font-size: 0.8rem;
   cursor: pointer;
 }
 
 .toolbar-btn--active {
-  border-color: #3b82f6;
+  border-color: var(--color-accent);
   background: rgba(59, 130, 246, 0.22);
 }
 
 .toolbar-btn--primary {
-  border-color: #22c55e;
+  border-color: var(--color-primary);
   background: rgba(34, 197, 94, 0.22);
 }
 
@@ -484,7 +496,7 @@ onUnmounted(() => {
   cursor: not-allowed;
   border-color: rgba(255, 255, 255, 0.1);
   background: rgba(255, 255, 255, 0.05);
-  color: #64748b;
+  color: var(--color-text-muted);
 }
 
 .toolbar-divider {
@@ -501,17 +513,17 @@ onUnmounted(() => {
 
 .slider-label {
   font-size: 0.75rem;
-  color: #94a3b8;
+  color: var(--color-text-dim);
 }
 
 .slider {
   width: 70px;
-  accent-color: #3b82f6;
+  accent-color: var(--color-accent);
 }
 
 .slider-value {
   font-size: 0.75rem;
-  color: #f8fafc;
+  color: var(--color-text-bright);
   min-width: 30px;
 }
 </style>

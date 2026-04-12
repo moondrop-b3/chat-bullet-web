@@ -22,10 +22,12 @@ const emit = defineEmits<{
 }>();
 
 function handleSend() {
-  const t = text.value.trim();
-  if (!t) return;
+  const trimmedText = text.value.trim();
+  if (!trimmedText) {
+    return;
+  }
   emit("send", {
-    text: t,
+    text: trimmedText,
     color: color.value ?? "#ffffff",
     size: size.value,
     pinPosition: pinPosition.value,
@@ -39,7 +41,7 @@ function handleSend() {
     <!-- 新着バナー -->
     <div
       v-if="newCount > 0"
-      class="cb-new-banner absolute z-20 cursor-pointer select-none rounded-full px-4 py-1 text-xs font-bold text-white"
+      class="cb-new-banner absolute z-20 cursor-pointer select-none rounded-full px-4 py-1 text-xs font-bold text-cb-text-bright"
       @click="emit('scrollToBottom')"
     >
       ↓ {{ newCount }}件の新着
@@ -65,7 +67,7 @@ function handleSend() {
       />
       <button
         type="button"
-        class="btn-send rounded-md px-3.5 py-2 text-sm font-bold flex-shrink-0 cursor-pointer text-white"
+        class="btn-send rounded-md px-3.5 py-2 text-sm font-bold flex-shrink-0 cursor-pointer text-cb-text-bright"
         @click="handleSend"
       >
         送信
@@ -82,7 +84,8 @@ function handleSend() {
         active-style="background:#3b82f6;border:1px solid #3b82f6;color:#fff"
         inactive-style="background:#2a2a2a;border:1px solid #3a3a3a;color:#aaa"
         @click="size = s.value"
-      >{{ s.label }}</BaseToggleButton>
+        >{{ s.label }}</BaseToggleButton
+      >
       <span class="cb-label-muted text-xs ml-2">位置:</span>
       <BaseToggleButton
         v-for="p in PINS"
@@ -91,7 +94,8 @@ function handleSend() {
         active-style="background:#3b82f6;border:1px solid #3b82f6;color:#fff"
         inactive-style="background:#2a2a2a;border:1px solid #3a3a3a;color:#aaa"
         @click="pinPosition = p.value"
-      >{{ p.label }}</BaseToggleButton>
+        >{{ p.label }}</BaseToggleButton
+      >
     </div>
 
     <!-- ページ固有コンテンツ -->
@@ -101,25 +105,25 @@ function handleSend() {
 
 <style scoped>
 .comment-form-footer {
-  background: #1a1a1a;
-  border-top: 1px solid #2a2a2a;
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-surface-2);
   flex-shrink: 0;
 }
 
 .form-input {
-  background: #2a2a2a;
-  border: 1px solid #3a3a3a;
-  color: #eee;
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
 }
 
 .color-picker {
-  background: #2a2a2a;
-  border: 1px solid #3a3a3a;
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
   padding: 2px;
 }
 
 .btn-send {
-  background: #22c55e;
+  background: var(--color-primary);
   border: none;
 }
 </style>

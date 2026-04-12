@@ -1,46 +1,37 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from "vue";
 import BaseToggleButton from "./BaseToggleButton.vue";
+import { useLocalStorage } from "../composables/useLocalStorage";
 import type { PostCommentParams } from "../api/client";
-import type { CommentSize, PinPosition } from "../../shared/types";
+import type { CommentSize, PinPosition, RapidStock } from "../../shared/types";
 import { SIZES, PINS } from "../constants/commentOptions";
 
-const RAPID_KEY = "chatbullet_rapid_stocks";
-const KONAMI = ["ArrowUp","ArrowUp","ArrowDown","ArrowDown","ArrowLeft","ArrowRight","ArrowLeft","ArrowRight","b","a"];
-
-type RapidStock = {
-  label: string;
-  text: string;
-  color: string;
-  size: CommentSize;
-  pin: PinPosition;
-};
+const KONAMI = [
+  "ArrowUp",
+  "ArrowUp",
+  "ArrowDown",
+  "ArrowDown",
+  "ArrowLeft",
+  "ArrowRight",
+  "ArrowLeft",
+  "ArrowRight",
+  "b",
+  "a",
+] as const;
 
 const emit = defineEmits<{
   send: [params: Omit<PostCommentParams, "author">];
 }>();
 
-const visible = ref(false);
-const kBuf: string[] = [];
+const isVisible = ref(false);
+const konamiBuffer: string[] = [];
 
-const stocks = ref<RapidStock[]>(loadStocks());
+const stocks = useLocalStorage("chatbullet_rapid_stocks");
 const newLabel = ref("");
 const newText = ref("");
 const newColor = ref("#ffffff");
 const newSize = ref<CommentSize>("medium");
 const newPin = ref<PinPosition>(null);
-
-function loadStocks(): RapidStock[] {
-  try {
-    return JSON.parse(localStorage.getItem(RAPID_KEY) ?? "[]") as RapidStock[];
-  } catch {
-    return [];
-  }
-}
-
-function saveStocks() {
-  localStorage.setItem(RAPID_KEY, JSON.stringify(stocks.value));
-}
 
 function sendStock(stock: RapidStock) {
   emit("send", {
@@ -54,24 +45,40 @@ function sendStock(stock: RapidStock) {
 function addStock() {
   const label = newLabel.value.trim();
   const text = newText.value.trim();
-  if (!label || !text) return;
-  stocks.value.push({ label, text, color: newColor.value, size: newSize.value, pin: newPin.value });
-  saveStocks();
+  if (!label || !text) {
+    return;
+  }
+  stocks.value = [
+    ...(stocks.value ?? []),
+    {
+      label,
+      text,
+      color: newColor.value,
+      size: newSize.value,
+      pin: newPin.value,
+    },
+  ];
   newLabel.value = "";
   newText.value = "";
 }
 
-function deleteStock(i: number) {
-  stocks.value.splice(i, 1);
-  saveStocks();
+function deleteStock(index: number) {
+  stocks.value = (stocks.value ?? []).filter(
+    (_, stockIndex) => stockIndex !== index,
+  );
 }
 
 function onKeydown(e: KeyboardEvent) {
-  kBuf.push(e.key);
-  if (kBuf.length > KONAMI.length) kBuf.shift();
-  if (kBuf.length === KONAMI.length && kBuf.every((k, i) => k === KONAMI[i])) {
-    visible.value = !visible.value;
-    kBuf.length = 0;
+  konamiBuffer.push(e.key);
+  if (konamiBuffer.length > KONAMI.length) {
+    konamiBuffer.shift();
+  }
+  if (
+    konamiBuffer.length === KONAMI.length &&
+    konamiBuffer.every((k, i) => k === KONAMI[i])
+  ) {
+    isVisible.value = !isVisible.value;
+    konamiBuffer.length = 0;
   }
 }
 
@@ -80,7 +87,7 @@ onUnmounted(() => window.removeEventListener("keydown", onKeydown));
 </script>
 
 <template>
-  <div v-show="visible" class="rapid-panel flex flex-col gap-2 p-3">
+  <div v-show="isVisible" class="rapid-panel flex flex-col gap-2 p-3">
     <!-- 登録済みストック -->
     <div class="flex flex-wrap gap-1.5 items-center">
       <div
@@ -134,7 +141,8 @@ onUnmounted(() => window.removeEventListener("keydown", onKeydown));
         active-style="background:#3b82f6;border:1px solid #3b82f6;color:#fff"
         inactive-style="background:#2a2a2a;border:1px solid #3a3a3a;color:#aaa"
         @click="newSize = s.value"
-      >{{ s.label }}</BaseToggleButton>
+        >{{ s.label }}</BaseToggleButton
+      >
       <BaseToggleButton
         v-for="p in PINS"
         :key="String(p.value)"
@@ -142,7 +150,8 @@ onUnmounted(() => window.removeEventListener("keydown", onKeydown));
         active-style="background:#3b82f6;border:1px solid #3b82f6;color:#fff"
         inactive-style="background:#2a2a2a;border:1px solid #3a3a3a;color:#aaa"
         @click="newPin = p.value"
-      >{{ p.label }}</BaseToggleButton>
+        >{{ p.label }}</BaseToggleButton
+      >
       <button
         type="button"
         class="btn-add rounded-md px-3 py-1 text-sm cursor-pointer"
@@ -156,43 +165,43 @@ onUnmounted(() => window.removeEventListener("keydown", onKeydown));
 
 <style scoped>
 .rapid-panel {
-  background: #111;
-  border-top: 1px solid #2a2a2a;
+  background: var(--color-bg);
+  border-top: 1px solid var(--color-surface-2);
 }
 
 .rapid-stock-btn {
-  background: #1e1e1e;
-  border: 1px solid #3a3a3a;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
 }
 
 .rapid-delete-btn {
   background: none;
   border: none;
-  color: #666;
+  color: var(--color-text-muted);
 }
 
 .rapid-label-input {
   width: 70px;
-  background: #2a2a2a;
-  border: 1px solid #3a3a3a;
-  color: #eee;
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
 }
 
 .rapid-text-input {
-  background: #2a2a2a;
-  border: 1px solid #3a3a3a;
-  color: #eee;
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
 }
 
 .color-picker-sm {
-  background: #2a2a2a;
-  border: 1px solid #3a3a3a;
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
   padding: 1px;
 }
 
 .btn-add {
-  background: #374151;
-  color: #eee;
+  background: var(--color-surface-dark);
+  color: var(--color-text);
   border: none;
 }
 </style>
