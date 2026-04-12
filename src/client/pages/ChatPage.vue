@@ -64,7 +64,7 @@ onMounted(async () => {
         }}</span>
         <span
           class="font-bold"
-          :style="{ color: comment.color || '#22c55e' }"
+          :style="{ color: comment.color || 'var(--color-primary)' }"
           :title="comment.author"
           >{{ comment.author }}</span
         >

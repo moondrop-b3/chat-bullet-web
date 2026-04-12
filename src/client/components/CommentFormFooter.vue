@@ -86,8 +86,6 @@ function handleSend() {
         v-for="s in SIZES"
         :key="s.value"
         :active="size === s.value"
-        active-style="background:#3b82f6;border:1px solid #3b82f6;color:#fff"
-        inactive-style="background:#2a2a2a;border:1px solid #3a3a3a;color:#aaa"
         @click="size = s.value"
         >{{ s.label }}</BaseToggleButton
       >
@@ -96,8 +94,6 @@ function handleSend() {
         v-for="p in PINS"
         :key="String(p.value)"
         :active="pinPosition === p.value"
-        active-style="background:#3b82f6;border:1px solid #3b82f6;color:#fff"
-        inactive-style="background:#2a2a2a;border:1px solid #3a3a3a;color:#aaa"
         @click="pinPosition = p.value"
         >{{ p.label }}</BaseToggleButton
       >

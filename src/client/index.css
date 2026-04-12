@@ -38,29 +38,35 @@
 /* ── 共通チャットUIクラス ─────────────────────────────────────────────── */
 @layer components {
   .cb-comment-item {
-    background: #1e1e1e;
-    border: 1px solid #2a2a2a;
+    background: var(--color-surface);
+    border: 1px solid var(--color-surface-2);
   }
 
   .cb-comment-time {
-    color: #666;
+    color: var(--color-text-muted);
   }
 
   .cb-comment-text {
-    color: #ccc;
+    color: var(--color-text-secondary);
   }
 
   .cb-new-banner {
     bottom: 100%;
     left: 50%;
     transform: translateX(-50%) translateY(-8px);
-    background: #22c55e;
+    background: var(--color-primary);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
   }
 
   .cb-label-muted {
-    color: #666;
+    color: var(--color-text-muted);
   }
+}
+
+/* ── アニメーション ───────────────────────────────────────────────────── */
+@keyframes cb-scroll-left {
+  from { transform: translateX(0); }
+  to   { transform: translateX(calc(-100vw - 100%)); }
 }
 
 html {

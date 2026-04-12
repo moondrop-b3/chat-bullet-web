@@ -4,7 +4,6 @@ import {
   reactive,
   computed,
   useTemplateRef,
-  onMounted,
   onUnmounted,
 } from "vue";
 import { useRouter } from "vue-router";
@@ -218,20 +217,6 @@ onMessage((msg) => {
     addComment(msg.comment);
   } else if (msg.type === "config") {
     Object.assign(config, msg.config);
-  }
-});
-
-onMounted(() => {
-  if (!document.getElementById("cb-keyframes")) {
-    const style = document.createElement("style");
-    style.id = "cb-keyframes";
-    style.textContent = `
-      @keyframes cb-scroll-left {
-        from { transform: translateX(0); }
-        to   { transform: translateX(calc(-100vw - 100%)); }
-      }
-    `;
-    document.head.appendChild(style);
   }
 });
 
