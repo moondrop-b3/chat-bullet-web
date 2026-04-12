@@ -30,11 +30,8 @@
   --color-toolbar-btn-disabled-bg: rgba(255, 255, 255, 0.05);
   --color-toolbar-btn-disabled-border: rgba(255, 255, 255, 0.1);
   --color-toolbar-divider: rgba(255, 255, 255, 0.2);
-  --color-stream-placeholder-bg: #cbd5e1;
-  --color-stream-placeholder-border: #ef4444;
-  --color-stream-screen-bg: #f8fafc;
-  --color-stream-screen-border: #f87171;
-  --color-stream-screen-text: #0f172a;
+  --color-stream-placeholder-bg: #0a0f1a;
+  --color-stream-screen-text: rgba(210, 220, 255, 0.65);
   --color-video-bg: #000000;
 }
 

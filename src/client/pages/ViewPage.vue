@@ -9,7 +9,11 @@ import {
 } from "vue";
 import { useRouter } from "vue-router";
 import { useWebSocket } from "../composables/useWebSocket";
-import type { CommentPayload, ConfigPayload, CommentSize } from "../../shared/types";
+import type {
+  CommentPayload,
+  ConfigPayload,
+  CommentSize,
+} from "../../shared/types";
 
 const router = useRouter();
 
@@ -26,11 +30,7 @@ type CommentAreaMode = "full" | "top" | "bottom";
 
 const commentAreaMode = ref<CommentAreaMode>("full");
 
-const COMMENT_AREA_MODES: CommentAreaMode[] = [
-  "full",
-  "top",
-  "bottom",
-];
+const COMMENT_AREA_MODES: CommentAreaMode[] = ["full", "top", "bottom"];
 
 const commentAreaLabel = computed(() => {
   if (commentAreaMode.value === "full") {
@@ -248,18 +248,23 @@ onUnmounted(() => {
     @mouseleave="isToolbarVisible = false"
   >
     <!-- 映像エリア -->
-    <div class="absolute inset-0 flex items-center justify-center overflow-hidden">
+    <div
+      class="absolute inset-0 flex items-center justify-center overflow-hidden"
+    >
       <div
         v-show="!hasStream"
-        class="absolute inset-0 flex items-center justify-center bg-cb-stream-placeholder-bg border-8 border-cb-stream-placeholder-border shadow-[0_0_0_10px_rgba(239,68,68,0.24)] z-30 box-border"
+        class="absolute inset-0 flex flex-col items-center justify-center bg-cb-stream-placeholder-bg z-30"
       >
-        <div
-          class="w-[min(84%,1200px)] h-[min(66%,760px)] flex items-center justify-center border-[3px] border-dashed border-cb-stream-screen-border bg-cb-stream-screen-bg rounded-[18px]"
+        <p
+          class="text-4xl font-black tracking-[0.4em] text-cb-stream-screen-text uppercase"
         >
-          <p class="max-w-[80%] leading-relaxed text-base text-cb-stream-screen-text text-center">
-            ツールバーの「キャプチャ開始」で画面を選択してください。
-          </p>
-        </div>
+          No Signal
+        </p>
+        <p
+          class="mt-4 text-xs tracking-[0.2em] text-cb-stream-screen-text opacity-40"
+        >
+          ツールバーの「キャプチャ開始」で画面を選択してください。
+        </p>
       </div>
       <video
         ref="videoEl"
@@ -272,17 +277,27 @@ onUnmounted(() => {
     </div>
 
     <!-- 弾幕オーバーレイ -->
-    <div ref="overlayEl" v-show="isCommentsEnabled" class="absolute inset-0 pointer-events-none overflow-hidden z-[70]">
-      <div ref="pinnedTopEl" class="absolute left-0 right-0 top-4 flex flex-col items-center gap-2.5 pointer-events-none z-[85]" />
-      <div ref="pinnedBottomEl" class="absolute left-0 right-0 bottom-4 flex flex-col-reverse items-center gap-2.5 pointer-events-none z-[85]" />
+    <div
+      ref="overlayEl"
+      v-show="isCommentsEnabled"
+      class="absolute inset-0 pointer-events-none overflow-hidden z-[70]"
+    >
+      <div
+        ref="pinnedTopEl"
+        class="absolute left-0 right-0 top-4 flex flex-col items-center gap-2.5 pointer-events-none z-[85]"
+      />
+      <div
+        ref="pinnedBottomEl"
+        class="absolute left-0 right-0 bottom-4 flex flex-col-reverse items-center gap-2.5 pointer-events-none z-[85]"
+      />
     </div>
 
     <!-- ツールバー（ホバーで表示・下中央） -->
     <div
       class="absolute bottom-4 left-1/2 -translate-x-1/2 flex flex-wrap gap-2 items-center px-3.5 py-2.5 bg-cb-toolbar-bg rounded-[14px] transition-opacity duration-[160ms] z-[95] whitespace-nowrap"
       :style="{
-        opacity: isToolbarVisible ? 1 : 0,
-        pointerEvents: isToolbarVisible ? 'auto' : 'none',
+        opacity: isToolbarVisible || !hasStream ? 1 : 0,
+        pointerEvents: isToolbarVisible || !hasStream ? 'auto' : 'none',
       }"
     >
       <button
@@ -315,7 +330,9 @@ onUnmounted(() => {
           class="w-[70px] accent-cb-accent"
           @input="sendConfig"
         />
-        <span class="text-xs text-cb-text-bright min-w-[30px]">{{ config.fontSize }}px</span>
+        <span class="text-xs text-cb-text-bright min-w-[30px]"
+          >{{ config.fontSize }}px</span
+        >
       </label>
       <label class="flex items-center gap-1">
         <span class="text-xs text-cb-text-dim">速度</span>
@@ -328,7 +345,9 @@ onUnmounted(() => {
           class="w-[70px] accent-cb-accent"
           @input="sendConfig"
         />
-        <span class="text-xs text-cb-text-bright min-w-[30px]">{{ config.durationSec.toFixed(1) }}s</span>
+        <span class="text-xs text-cb-text-bright min-w-[30px]"
+          >{{ config.durationSec.toFixed(1) }}s</span
+        >
       </label>
       <label class="flex items-center gap-1">
         <span class="text-xs text-cb-text-dim">固定</span>
@@ -341,7 +360,9 @@ onUnmounted(() => {
           class="w-[70px] accent-cb-accent"
           @input="sendConfig"
         />
-        <span class="text-xs text-cb-text-bright min-w-[30px]">{{ config.pinDurationSec }}s</span>
+        <span class="text-xs text-cb-text-bright min-w-[30px]"
+          >{{ config.pinDurationSec }}s</span
+        >
       </label>
 
       <div class="w-px h-6 bg-cb-toolbar-divider" />
@@ -349,9 +370,11 @@ onUnmounted(() => {
       <button
         type="button"
         class="border rounded-lg text-cb-text-bright px-2.5 py-1.5 text-[0.8rem] cursor-pointer"
-        :class="isCommentsEnabled
-          ? 'border-cb-accent bg-cb-toolbar-btn-active-bg'
-          : 'border-cb-toolbar-btn-border bg-cb-toolbar-btn-bg'"
+        :class="
+          isCommentsEnabled
+            ? 'border-cb-accent bg-cb-toolbar-btn-active-bg'
+            : 'border-cb-toolbar-btn-border bg-cb-toolbar-btn-bg'
+        "
         @click="isCommentsEnabled = !isCommentsEnabled"
       >
         コメント {{ isCommentsEnabled ? "OFF" : "ON" }}
@@ -377,4 +400,3 @@ onUnmounted(() => {
     </div>
   </div>
 </template>
-
