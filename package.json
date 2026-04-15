@@ -1,14 +1,14 @@
 {
   "name": "chat-bullet-web",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Danmaku overlay web app",
-  "main": "dist/server/index.js",
+  "main": "dist/server/server/index.js",
   "author": "moondrop-b3",
   "license": "MIT",
   "scripts": {
     "typecheck": "vue-tsc --noEmit -p src/client/tsconfig.json && tsc -p tsconfig.server.json --noEmit",
     "dev": "ts-node-dev --project tsconfig.server.json --respawn --transpile-only src/server/index.ts",
-    "start": "node dist/server/index.js",
+    "start": "node dist/server/server/index.js",
     "client:dev": "vite --config vite.config.ts",
     "client:build": "vite build --config vite.config.ts",
     "client:preview": "vite preview --config vite.config.ts",
