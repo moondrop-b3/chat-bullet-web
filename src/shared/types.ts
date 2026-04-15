@@ -11,14 +11,6 @@ export type CommentPayload = {
   createdAt: number;
 };
 
-export type ConfigPayload = {
-  durationSec: number;
-  fontSize: number;
-  pinDurationSec: number;
-  isForceColor: boolean;
-  forcedColor: string;
-};
-
 export type RapidStock = {
   label: string;
   text: string;
@@ -27,6 +19,4 @@ export type RapidStock = {
   pin: PinPosition;
 };
 
-export type WsMessage =
-  | { type: "config"; config: Partial<ConfigPayload> }
-  | { type: "bullet"; comment: CommentPayload };
+export type WsMessage = { type: "bullet"; comment: CommentPayload };

@@ -2,10 +2,19 @@ import { ref, computed } from "vue";
 import type { WritableComputedRef } from "vue";
 import type { RapidStock } from "../../shared/types";
 
+export type ViewConfig = {
+  durationSec: number;
+  fontSize: number;
+  pinDurationSec: number;
+  isForceColor: boolean;
+  forcedColor: string;
+};
+
 type LocalStorageMap = {
   chatbullet_author: string;
   chatbullet_color: string;
   chatbullet_rapid_stocks: RapidStock[];
+  chatbullet_view_config: ViewConfig;
 };
 
 type LocalStorageKey = keyof LocalStorageMap;

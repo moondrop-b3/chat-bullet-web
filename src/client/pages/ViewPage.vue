@@ -3,16 +3,15 @@ import {
   ref,
   reactive,
   computed,
+  watch,
   useTemplateRef,
   onUnmounted,
 } from "vue";
 import { useRouter } from "vue-router";
 import { useWebSocket } from "../composables/useWebSocket";
-import type {
-  CommentPayload,
-  ConfigPayload,
-  CommentSize,
-} from "../../shared/types";
+import { useLocalStorage } from "../composables/useLocalStorage";
+import type { ViewConfig } from "../composables/useLocalStorage";
+import type { CommentPayload, CommentSize } from "../../shared/types";
 
 const router = useRouter();
 
@@ -48,13 +47,27 @@ function cycleCommentArea() {
 }
 
 // ── 設定 ─────────────────────────────────────────────────────────────
-const config = reactive<ConfigPayload>({
+const DEFAULT_CONFIG: ViewConfig = {
   durationSec: 4,
   fontSize: 40,
   pinDurationSec: 4,
   isForceColor: false,
   forcedColor: "#ffffff",
+};
+
+const savedConfig = useLocalStorage("chatbullet_view_config");
+const config = reactive<ViewConfig>({
+  ...DEFAULT_CONFIG,
+  ...savedConfig.value,
 });
+
+watch(
+  () => ({ ...config }),
+  (val) => {
+    savedConfig.value = val;
+  },
+  { deep: true },
+);
 
 // ── 画面キャプチャ ────────────────────────────────────────────────────
 let localStream: MediaStream | null = null;
@@ -206,22 +219,15 @@ function addComment(comment: CommentPayload) {
 }
 
 // ── WebSocket ─────────────────────────────────────────────────────────
-const { send: wsSend, onMessage } = useWebSocket();
-
-function sendConfig() {
-  wsSend({ type: "config", config: { ...config } });
-}
+const { onMessage } = useWebSocket();
 
 function toggleForceColor() {
   config.isForceColor = !config.isForceColor;
-  sendConfig();
 }
 
 onMessage((msg) => {
   if (msg.type === "bullet") {
     addComment(msg.comment);
-  } else if (msg.type === "config") {
-    Object.assign(config, msg.config);
   }
 });
 
@@ -318,7 +324,6 @@ onUnmounted(() => {
           max="100"
           step="2"
           class="w-[70px] accent-cb-accent"
-          @input="sendConfig"
         />
         <span class="text-xs text-cb-text-bright min-w-[30px]"
           >{{ config.fontSize }}px</span
@@ -333,7 +338,6 @@ onUnmounted(() => {
           max="8"
           step="0.5"
           class="w-[70px] accent-cb-accent"
-          @input="sendConfig"
         />
         <span class="text-xs text-cb-text-bright min-w-[30px]"
           >{{ config.durationSec.toFixed(1) }}s</span
@@ -346,9 +350,8 @@ onUnmounted(() => {
           type="range"
           min="2"
           max="10"
-          step="1"
+          step="0.5"
           class="w-[70px] accent-cb-accent"
-          @input="sendConfig"
         />
         <span class="text-xs text-cb-text-bright min-w-[30px]"
           >{{ config.pinDurationSec }}s</span
@@ -396,7 +399,6 @@ onUnmounted(() => {
         type="color"
         title="強制カラー"
         class="w-10 h-9 rounded-md cursor-pointer flex-shrink-0 bg-cb-surface-2 border border-cb-border p-0.5"
-        @change="sendConfig"
       />
 
       <div class="w-px h-6 bg-cb-toolbar-divider" />
