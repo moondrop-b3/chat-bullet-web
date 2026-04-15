@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, useTemplateRef, onMounted, nextTick } from "vue";
+import { useTemplateRef, onMounted, nextTick } from "vue";
 import { useWebSocket } from "../composables/useWebSocket";
 import { useCommentLog } from "../composables/useCommentLog";
 import { useCommentForm } from "../composables/useCommentForm";
@@ -18,17 +18,11 @@ const {
 } = useCommentLog(logAreaEl);
 const { sendComment } = useCommentForm();
 
-const isForceColor = ref(false);
-
 const { onMessage } = useWebSocket("comment");
 
 onMessage((msg) => {
   if (msg.type === "bullet") {
     appendComment(msg.comment);
-  } else if (msg.type === "config") {
-    if (typeof msg.config.forceColor === "boolean") {
-      isForceColor.value = msg.config.forceColor;
-    }
   } else if (msg.type === "clearLog") {
     comments.value = comments.value.filter(
       (comment) => comment.createdAt >= msg.before,
@@ -78,10 +72,6 @@ onMounted(async () => {
       :new-count="newCount"
       @send="sendComment"
       @scroll-to-bottom="scrollToBottom"
-    >
-      <div v-if="isForceColor" class="text-cb-warning text-xs">
-        ⚠ 管理者が文字色を強制中
-      </div>
-    </CommentFormFooter>
+    />
   </div>
 </template>

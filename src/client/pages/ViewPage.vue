@@ -212,6 +212,11 @@ function sendConfig() {
   wsSend({ type: "config", config: { ...config } });
 }
 
+function toggleForceColor() {
+  config.forceColor = !config.forceColor;
+  sendConfig();
+}
+
 onMessage((msg) => {
   if (msg.type === "bullet") {
     addComment(msg.comment);
@@ -371,6 +376,28 @@ onUnmounted(() => {
       >
         {{ commentAreaLabel }}
       </button>
+
+      <div class="w-px h-6 bg-cb-toolbar-divider" />
+
+      <button
+        type="button"
+        class="border rounded-lg text-cb-text-bright px-2.5 py-1.5 text-[0.8rem] cursor-pointer"
+        :class="
+          config.forceColor
+            ? 'border-cb-accent bg-cb-toolbar-btn-active-bg'
+            : 'border-cb-toolbar-btn-border bg-cb-toolbar-btn-bg'
+        "
+        @click="toggleForceColor"
+      >
+        色強制
+      </button>
+      <input
+        v-model="config.forcedColor"
+        type="color"
+        title="強制カラー"
+        class="w-10 h-9 rounded-md cursor-pointer flex-shrink-0 bg-cb-surface-2 border border-cb-border p-0.5"
+        @change="sendConfig"
+      />
 
       <div class="w-px h-6 bg-cb-toolbar-divider" />
 
