@@ -12,7 +12,7 @@ function isWsMessage(value: unknown): value is WsMessage {
   );
 }
 
-export function useWebSocket(role: string) {
+export function useWebSocket() {
   const isConnected = ref(false);
   const handlers = new Set<MessageHandler>();
   let ws: WebSocket | null = null;
@@ -23,7 +23,7 @@ export function useWebSocket(role: string) {
       return;
     }
     const proto = location.protocol === "https:" ? "wss:" : "ws:";
-    ws = new WebSocket(`${proto}//${location.host}/ws?role=${role}`);
+    ws = new WebSocket(`${proto}//${location.host}/ws`);
 
     ws.addEventListener("open", () => {
       isConnected.value = true;

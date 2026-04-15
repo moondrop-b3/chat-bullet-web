@@ -18,15 +18,11 @@ const {
 } = useCommentLog(logAreaEl);
 const { sendComment } = useCommentForm();
 
-const { onMessage } = useWebSocket("comment");
+const { onMessage } = useWebSocket();
 
 onMessage((msg) => {
   if (msg.type === "bullet") {
     appendComment(msg.comment);
-  } else if (msg.type === "clearLog") {
-    comments.value = comments.value.filter(
-      (comment) => comment.createdAt >= msg.before,
-    );
   }
 });
 

@@ -4,13 +4,9 @@ import { state, broadcast, safeSend } from "../store";
 import type { ClientSocket } from "../store";
 
 export function registerWebSocket(wss: WebSocketServer) {
-  wss.on("connection", (rawWs, req) => {
+  wss.on("connection", (rawWs) => {
     const ws = rawWs as ClientSocket;
-    const params = new URLSearchParams(req.url?.split("?")[1]);
-    const role = params.get("role") || "viewer";
-    const clientId = String(state.nextViewerId++);
-    ws.clientId = clientId;
-    ws.role = role;
+    const clientId = String(state.nextClientId++);
 
     state.clients.set(clientId, ws);
     safeSend(ws, { type: "config", config: state.config });
@@ -46,9 +42,9 @@ function handleConfig(config: Partial<ConfigPayload>) {
     durationSec: clamp(config.durationSec, state.config.durationSec, 1, 20),
     fontSize: clamp(config.fontSize, state.config.fontSize, 10, 100),
     pinDurationSec: clamp(config.pinDurationSec, state.config.pinDurationSec, 1, 30),
-    forceColor: typeof config.forceColor === "boolean"
-      ? config.forceColor
-      : state.config.forceColor,
+    isForceColor: typeof config.isForceColor === "boolean"
+      ? config.isForceColor
+      : state.config.isForceColor,
     forcedColor: typeof config.forcedColor === "string"
       ? config.forcedColor
       : state.config.forcedColor,

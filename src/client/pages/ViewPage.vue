@@ -52,7 +52,7 @@ const config = reactive<ConfigPayload>({
   durationSec: 4,
   fontSize: 40,
   pinDurationSec: 4,
-  forceColor: false,
+  isForceColor: false,
   forcedColor: "#ffffff",
 });
 
@@ -143,7 +143,7 @@ function getCommentTop(lane: number) {
 function createCommentEl(comment: CommentPayload): HTMLElement {
   const el = document.createElement("div");
   el.textContent = comment.text;
-  const clr = config.forceColor
+  const clr = config.isForceColor
     ? config.forcedColor
     : comment.color || "#ffffff";
   const ratio = SIZE_RATIOS[comment.size] ?? 1.0;
@@ -206,14 +206,14 @@ function addComment(comment: CommentPayload) {
 }
 
 // ── WebSocket ─────────────────────────────────────────────────────────
-const { send: wsSend, onMessage } = useWebSocket("view");
+const { send: wsSend, onMessage } = useWebSocket();
 
 function sendConfig() {
   wsSend({ type: "config", config: { ...config } });
 }
 
 function toggleForceColor() {
-  config.forceColor = !config.forceColor;
+  config.isForceColor = !config.isForceColor;
   sendConfig();
 }
 
@@ -383,7 +383,7 @@ onUnmounted(() => {
         type="button"
         class="border rounded-lg text-cb-text-bright px-2.5 py-1.5 text-[0.8rem] cursor-pointer"
         :class="
-          config.forceColor
+          config.isForceColor
             ? 'border-cb-accent bg-cb-toolbar-btn-active-bg'
             : 'border-cb-toolbar-btn-border bg-cb-toolbar-btn-bg'
         "

@@ -2,20 +2,17 @@ import { WebSocket } from "ws";
 import type { CommentPayload, ConfigPayload } from "../shared/types";
 import { loadRecentComments, insertComment, MAX_MEMORY_COMMENTS } from "./db";
 
-export type ClientSocket = WebSocket & {
-  clientId?: string;
-  role?: string;
-};
+export type ClientSocket = WebSocket;
 
 export const state = {
   comments: loadRecentComments(),
   clients: new Map<string, ClientSocket>(),
-  nextViewerId: 1,
+  nextClientId: 1,
   config: {
     durationSec: 3,
     fontSize: 32,
     pinDurationSec: 3,
-    forceColor: false,
+    isForceColor: false,
     forcedColor: "#ffffff",
   } as ConfigPayload,
 };

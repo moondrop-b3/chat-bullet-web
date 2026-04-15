@@ -15,7 +15,7 @@ export type ConfigPayload = {
   durationSec: number;
   fontSize: number;
   pinDurationSec: number;
-  forceColor: boolean;
+  isForceColor: boolean;
   forcedColor: string;
 };
 
@@ -28,16 +28,5 @@ export type RapidStock = {
 };
 
 export type WsMessage =
-  | { type: "offer"; viewerId: string; offer: unknown }
-  | { type: "answer"; viewerId: string; answer: unknown }
-  | {
-      type: "ice-candidate";
-      target: "viewer" | "sender";
-      viewerId: string;
-      candidate: unknown;
-    }
   | { type: "config"; config: Partial<ConfigPayload> }
-  | { type: "bullet"; comment: CommentPayload }
-  | { type: "server"; message: string; viewerId?: string }
-  | { type: "new-viewer"; viewerId: string }
-  | { type: "clearLog"; before: number };
+  | { type: "bullet"; comment: CommentPayload };
