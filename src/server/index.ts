@@ -7,7 +7,7 @@ import { networkInterfaces } from "os";
 import { execSync } from "child_process";
 import commentsRouter from "./routes/comments";
 import { registerWebSocket } from "./ws/handler";
-import { dbPath } from "./store";
+import { dbPath } from "./db";
 
 const PORT = process.env.PORT ? Number(process.env.PORT) : 3001;
 
