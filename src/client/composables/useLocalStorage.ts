@@ -2,16 +2,13 @@ import { ref, computed } from "vue";
 import type { WritableComputedRef } from "vue";
 import type { RapidStock } from "../../shared/types";
 
-type LocalStorage =
-  | ["chatbullet_author", string]
-  | ["chatbullet_color", string]
-  | ["chatbullet_rapid_stocks", RapidStock[]];
+type LocalStorageMap = {
+  chatbullet_author: string;
+  chatbullet_color: string;
+  chatbullet_rapid_stocks: RapidStock[];
+};
 
-type LocalStorageKey = LocalStorage[0];
-type LocalStorageValue<K extends LocalStorageKey> = Extract<
-  LocalStorage,
-  [K, unknown]
->[1];
+type LocalStorageKey = keyof LocalStorageMap;
 
 // 文字列として生値で保存するキー（JSONシリアライズなし）
 const STRING_KEYS = [
@@ -26,18 +23,18 @@ function isStringKey(key: LocalStorageKey): key is StringKey {
 
 function readFromStorage<K extends LocalStorageKey>(
   key: K,
-): LocalStorageValue<K> | null {
+): LocalStorageMap[K] | null {
   const raw = localStorage.getItem(key);
   if (raw === null) {
     return null;
   }
   if (isStringKey(key)) {
-    // isStringKey ガード済みのため string だが、ジェネリック条件型の制約で unknown 経由が必要
-    return raw as unknown as LocalStorageValue<K>;
+    // isStringKey ガード済みのため string だが、インデックスアクセス型の制約で unknown 経由が必要
+    return raw as unknown as LocalStorageMap[K];
   }
   try {
-    // localStorage は外部データのため型を事前検証できない。ジェネリック条件型の制約で unknown 経由が必要
-    return JSON.parse(raw) as unknown as LocalStorageValue<K>;
+    // localStorage は外部データのため型を事前検証できない。インデックスアクセス型の制約で unknown 経由が必要
+    return JSON.parse(raw) as unknown as LocalStorageMap[K];
   } catch {
     return null;
   }
@@ -45,8 +42,8 @@ function readFromStorage<K extends LocalStorageKey>(
 
 export function useLocalStorage<K extends LocalStorageKey>(
   key: K,
-): WritableComputedRef<LocalStorageValue<K> | null> {
-  const stored = ref<LocalStorageValue<K> | null>(readFromStorage(key));
+): WritableComputedRef<LocalStorageMap[K] | null> {
+  const stored = ref<LocalStorageMap[K] | null>(readFromStorage(key));
   return computed({
     get: () => stored.value,
     set: (newVal) => {
