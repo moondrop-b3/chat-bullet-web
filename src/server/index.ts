@@ -7,7 +7,7 @@ import { networkInterfaces } from "os";
 import { execSync } from "child_process";
 import commentsRouter from "./routes/comments";
 import { registerWebSocket } from "./ws/handler";
-import { sessionFile } from "./store";
+import { dbPath } from "./store";
 
 const PORT = process.env.PORT ? Number(process.env.PORT) : 3001;
 
@@ -109,7 +109,7 @@ function sendIndexHtml(req: express.Request, res: express.Response) {
           }
         }
       }
-      console.log(`Comments session file: ${sessionFile}`);
+      console.log(`Comments DB: ${dbPath}`);
     });
   } catch (error) {
     console.error(error);

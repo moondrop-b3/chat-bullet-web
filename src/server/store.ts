@@ -1,6 +1,7 @@
 import { WebSocket } from "ws";
-import { mkdirSync, writeFileSync, readFileSync, existsSync } from "fs";
+import { mkdirSync } from "fs";
 import { join } from "path";
+import { DatabaseSync } from "node:sqlite";
 import type { CommentPayload, ConfigPayload } from "../shared/types";
 
 export type ClientSocket = WebSocket & {
@@ -8,29 +9,44 @@ export type ClientSocket = WebSocket & {
   role?: string;
 };
 
-// ── コメント永続化 ────────────────────────────────────────────────────
+// ── DB初期化 ──────────────────────────────────────────────────────────
 
 const dataDir = join(process.cwd(), "web-data");
 mkdirSync(dataDir, { recursive: true });
 
-export const sessionFile = join(
-  dataDir,
-  `comments-${new Date().toISOString().replace(/[:.]/g, "-")}.json`,
-);
+export const dbPath = join(dataDir, "comments.db");
+const db = new DatabaseSync(dbPath);
 
-function loadComments(): CommentPayload[] {
-  if (!existsSync(sessionFile)) return [];
-  try {
-    return JSON.parse(readFileSync(sessionFile, "utf8")) as CommentPayload[];
-  } catch {
-    return [];
-  }
+db.exec(`
+  CREATE TABLE IF NOT EXISTS comments (
+    id          TEXT    PRIMARY KEY,
+    author      TEXT    NOT NULL,
+    text        TEXT    NOT NULL,
+    color       TEXT    NOT NULL,
+    size        TEXT    NOT NULL,
+    pinPosition TEXT,
+    createdAt   INTEGER NOT NULL
+  )
+`);
+
+const MAX_MEMORY_COMMENTS = 100;
+
+const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+
+function loadRecentComments(): CommentPayload[] {
+  const since = Date.now() - ONE_DAY_MS;
+  const rows = db
+    .prepare(
+      `SELECT * FROM comments WHERE createdAt > ? ORDER BY createdAt DESC LIMIT ?`,
+    )
+    .all(since, MAX_MEMORY_COMMENTS) as CommentPayload[];
+  return rows.reverse();
 }
 
 // ── 共有ステート ──────────────────────────────────────────────────────
 
 export const state = {
-  comments: loadComments(),
+  comments: loadRecentComments(),
   clients: new Map<string, ClientSocket>(),
   nextViewerId: 1,
   config: {
@@ -44,11 +60,28 @@ export const state = {
 
 // ── 操作ヘルパー ──────────────────────────────────────────────────────
 
-export function persistComments() {
+const insertStmt = db.prepare(
+  `INSERT INTO comments (id, author, text, color, size, pinPosition, createdAt)
+   VALUES (?, ?, ?, ?, ?, ?, ?)`,
+);
+
+export function insertComment(comment: CommentPayload) {
   try {
-    writeFileSync(sessionFile, JSON.stringify(state.comments, null, 2), "utf8");
+    insertStmt.run(
+      comment.id,
+      comment.author,
+      comment.text,
+      comment.color,
+      comment.size,
+      comment.pinPosition ?? null,
+      comment.createdAt,
+    );
   } catch (err) {
-    console.error("Failed to persist comments:", err);
+    console.error("Failed to insert comment:", err);
+  }
+  state.comments.push(comment);
+  if (state.comments.length > MAX_MEMORY_COMMENTS) {
+    state.comments.shift();
   }
 }
 

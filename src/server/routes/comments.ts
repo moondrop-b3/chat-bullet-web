@@ -1,6 +1,6 @@
 import { Router } from "express";
 import type { CommentPayload } from "../../shared/types";
-import { state, persistComments, broadcast } from "../store";
+import { state, insertComment, broadcast } from "../store";
 
 const router = Router();
 
@@ -37,8 +37,7 @@ router.post("/", (req, res) => {
     createdAt: Date.now(),
   };
 
-  state.comments.push(comment);
-  persistComments();
+  insertComment(comment);
   broadcast({ type: "bullet", comment });
   res.status(201).json({ ok: true, comment });
 });
